@@ -597,7 +597,7 @@ def fe_grid_inputs(
     per_row: int = 3
 ) -> Dict[str, float]:
     st.markdown(f"#### {title}")
-    st.caption("Shared system FE: changing a value here updates the same product FE in every analysis tab.")
+    # st.caption("Shared system FE: changing a value here updates the same product FE in every analysis tab.")
     fe_map: Dict[str, float] = {}
     for i in range(0, len(products), per_row):
         row = products[i:i+per_row]
@@ -1879,19 +1879,19 @@ else:
                     fe_gc = 100.0 * n_dot * PRODUCT_MAP[product]["nₑ⁻ to product"] * F / max(cb_core["I_total_A"], EPS)
                     fe_check_rows.append({
                         "Product": product,
-                        "Shared system FE (%)": cb_fe_map.get(product, 0.0),
+                        "FE (%)": cb_fe_map.get(product, 0.0),
                         "GC-derived FE (%)": fe_gc,
                         "Difference (points)": fe_gc - cb_fe_map.get(product, 0.0),
                         f"Measured flow ({GAS_FLOW_UNIT})": slpm_to_display(flow_slpm),
                     })
                 fe_check_df = pd.DataFrame(fe_check_rows)
-                with st.expander("Compare GC-derived FE with the shared system FE", expanded=True):
+                with st.expander("Compare GC-derived FE with the FE", expanded=True):
                     st.dataframe(
                         fe_check_df,
                         hide_index=True,
                         use_container_width=True,
                         column_config={
-                            "Shared system FE (%)": st.column_config.NumberColumn(format="%.2f"),
+                            "FE (%)": st.column_config.NumberColumn(format="%.2f"),
                             "GC-derived FE (%)": st.column_config.NumberColumn(format="%.2f"),
                             "Difference (points)": st.column_config.NumberColumn(format="%+.2f"),
                             f"Measured flow ({GAS_FLOW_UNIT})": st.column_config.NumberColumn(format="%.4f"),
