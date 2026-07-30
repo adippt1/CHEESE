@@ -61,24 +61,24 @@ MV_OPTIONS = {
 st.sidebar.markdown("### Interface")
 UI_MODE = st.sidebar.radio(
     "Experience level",
-    options=["Guided", "Advanced"],
+    options=["Simple", "Advanced"],
     index=0,
     horizontal=True,
     key="ui_mode",
     help=(
-        "Guided Mode provides the essential inputs and results. "
+        "Simple Mode provides the essential inputs and results. "
         "Advanced Mode enables the complete carbon, energy, sensitivity, "
         "stack-sizing, and durability tools."
     ),
 )
-IS_GUIDED = UI_MODE == "Guided"
+IS_Simple = UI_MODE == "Simple"
 
 st.sidebar.caption(
-    "Guided Mode is intended for quick estimates and new users. "
+    "Simple Mode is intended for quick estimates and new users. "
     "Advanced Mode exposes the complete CHEESE model."
 )
 st.sidebar.divider()
-st.sidebar.header("Guided Settings" if IS_GUIDED else "Global Settings")
+st.sidebar.header("Simple Settings" if IS_Simple else "Global Settings")
 
 # Global display units. Calculations remain internally in SLPM for gas and
 # kg/h + L/h for condensed products.
@@ -86,7 +86,7 @@ if "_previous_gas_flow_unit" not in st.session_state:
     if "gs_gas_flow_unit" in st.session_state:
         st.session_state["_previous_gas_flow_unit"] = st.session_state["gs_gas_flow_unit"]
     else:
-        legacy_unit = "SCCM" if st.session_state.get("gs_use_sccm", False) else ("SCCM" if IS_GUIDED else "SLPM")
+        legacy_unit = "SCCM" if st.session_state.get("gs_use_sccm", False) else ("SCCM" if IS_Simple else "SLPM")
         st.session_state["_previous_gas_flow_unit"] = legacy_unit
 if "gs_gas_flow_unit" not in st.session_state:
     st.session_state["gs_gas_flow_unit"] = st.session_state["_previous_gas_flow_unit"]
@@ -99,7 +99,7 @@ GAS_FLOW_UNIT = st.sidebar.selectbox(
 )
 GAS_FLOW_SCALE = 1000.0 if GAS_FLOW_UNIT == "SCCM" else 1.0
 
-if IS_GUIDED:
+if IS_Simple:
     n_units_global = st.sidebar.number_input(
         "Number of identical cells",
         min_value=1,
@@ -120,11 +120,11 @@ if IS_GUIDED:
             help="STP is the common default for reported SCCM/SLPM values.",
         )
         st.caption(
-            "Guided Mode treats gas flows as dry standard flows. "
+            "Simple Mode treats gas flows as dry standard flows. "
             "Open Advanced Mode for wet-flow, humidity, pressure-drop, and liquid-unit controls."
         )
 
-    # Defaults retained for shared helper functions. Guided Mode does not expose
+    # Defaults retained for shared helper functions. Simple Mode does not expose
     # real-gas corrections because they are intentionally part of Advanced Mode.
     gas_temperature_C = 25.0
     gas_relative_humidity_pct = 0.0
@@ -204,7 +204,7 @@ _previous_unit = st.session_state["_previous_gas_flow_unit"]
 if GAS_FLOW_UNIT != _previous_unit:
     _unit_conversion = 1000.0 if GAS_FLOW_UNIT == "SCCM" else 1.0 / 1000.0
     for _flow_widget_key in (
-        "guided_co2_inlet",
+        "Simple_co2_inlet",
         "calc_inlet", "cb_inlet", "sz_inlet", "cap_cap",
         "exp_v1", "exp_v2", "exp_liquid_carbon", "exp_salt_carbon",
         "exp_dissolved_carbon", "exp_product_crossover", "exp_other_loss",
@@ -720,17 +720,17 @@ def build_sensitivity_table_U(core: Dict[str, float], Umin_pct: float, Umax_pct:
     return pd.DataFrame(rows)
 
 
-# -------------------- Guided-mode helpers and interface --------------------
+# -------------------- Simple-mode helpers and interface --------------------
 def friendly_product_name(product: str) -> str:
     return "Methylglyoxal (MGO)" if product == "MGO" else product
 
 
-def build_guided_fe_map(
+def build_Simple_fe_map(
     primary_product: str,
     primary_fe_pct: float,
     h2_fe_pct: float,
 ) -> Dict[str, float]:
-    """Create a complete FE map from the two Guided Mode FE inputs."""
+    """Create a complete FE map from the two Simple Mode FE inputs."""
     fe_map = {product: 0.0 for product in PRODUCT_LIST}
     fe_map[primary_product] = float(primary_fe_pct)
     fe_map["H₂"] = float(h2_fe_pct)
@@ -738,7 +738,7 @@ def build_guided_fe_map(
 
 
 def auto_format_liquid_mass_rate(kg_h: float) -> Tuple[str, float, str]:
-    """Choose a readable mass-rate unit for Guided Mode liquid products."""
+    """Choose a readable mass-rate unit for Simple Mode liquid products."""
     kg_h = max(0.0, float(kg_h))
     if kg_h >= 1.0:
         value, unit = kg_h, "kg/h"
@@ -758,8 +758,8 @@ def auto_format_liquid_mass_rate(kg_h: float) -> Tuple[str, float, str]:
     return formatted, value, unit
 
 
-def guided_product_rate(core: Dict[str, float], product: str) -> Tuple[str, str]:
-    """Return a readable production-rate value and unit for Guided Mode."""
+def Simple_product_rate(core: Dict[str, float], product: str) -> Tuple[str, str]:
+    """Return a readable production-rate value and unit for Simple Mode."""
     props = PRODUCT_MAP[product]
     if props["Phase"].lower() == "gas":
         return format_gas_flow(core.get(f"{product}_slpm", 0.0)), GAS_FLOW_UNIT
@@ -774,7 +774,7 @@ def guided_product_rate(core: Dict[str, float], product: str) -> Tuple[str, str]
     return formatted, unit
 
 
-def guided_fe_status(primary_fe_pct: float, h2_fe_pct: float) -> bool:
+def Simple_fe_status(primary_fe_pct: float, h2_fe_pct: float) -> bool:
     """Display FE closure feedback and return whether the FE inputs are valid."""
     assigned_fe = float(primary_fe_pct) + float(h2_fe_pct)
     st.markdown("#### Faradaic-efficiency closure")
@@ -803,9 +803,9 @@ def guided_fe_status(primary_fe_pct: float, h2_fe_pct: float) -> bool:
     return True
 
 
-def render_guided_mode() -> None:
+def render_Simple_mode() -> None:
     """Render the novice-facing CHEESE workflow using the shared calculation engine."""
-    st.markdown("## Guided Mode")
+    st.markdown("## Simple Mode")
     st.caption(
         "A focused workflow for quick laboratory estimates. "
         "The numerical model is the same one used by Advanced Mode."
@@ -817,11 +817,11 @@ def render_guided_mode() -> None:
     )
 
     st.markdown("### Step 1 — Choose your calculation")
-    guided_task = st.radio(
+    Simple_task = st.radio(
         "What do you want to calculate?",
         options=["production", "sizing"],
         horizontal=True,
-        key="guided_task",
+        key="Simple_task",
         format_func=lambda choice: (
             "Predict production from electrode area"
             if choice == "production"
@@ -837,140 +837,140 @@ def render_guided_mode() -> None:
 
     common1, common2, common3 = st.columns(3)
     with common1:
-        guided_product = st.selectbox(
+        Simple_product = st.selectbox(
             "Primary carbon product",
             options=carbon_products,
             index=0,
-            key="guided_product",
+            key="Simple_product",
             format_func=friendly_product_name,
-            help="Guided Mode tracks one carbon product plus hydrogen. Use Advanced Mode for a multi-product FE distribution.",
+            help="Simple Mode tracks one carbon product plus hydrogen. Use Advanced Mode for a multi-product FE distribution.",
         )
-        guided_product_fe = st.number_input(
-            f"{friendly_product_name(guided_product)} FE (%)",
+        Simple_product_fe = st.number_input(
+            f"{friendly_product_name(Simple_product)} FE (%)",
             min_value=0.0,
             max_value=100.0,
             value=90.0,
             step=1.0,
-            key="guided_product_fe",
+            key="Simple_product_fe",
         )
     with common2:
-        guided_h2_fe = st.number_input(
+        Simple_h2_fe = st.number_input(
             "H₂ FE (%)",
             min_value=0.0,
             max_value=100.0,
             value=5.0,
             step=1.0,
-            key="guided_h2_fe",
+            key="Simple_h2_fe",
         )
-        guided_utilization_pct = st.number_input(
+        Simple_utilization_pct = st.number_input(
             "Target CO₂ utilization (%)",
             min_value=1.0,
             max_value=100.0,
             value=50.0,
             step=5.0,
-            key="guided_utilization",
+            key="Simple_utilization",
             help="The fraction of inlet CO₂ incorporated into the selected carbon product in this idealized balance.",
         )
     with common3:
-        guided_j = st.number_input(
+        Simple_j = st.number_input(
             "Current density (mA/cm²)",
             min_value=0.0,
             value=200.0,
             step=10.0,
-            key="guided_j",
+            key="Simple_j",
         )
-        guided_voltage = st.number_input(
+        Simple_voltage = st.number_input(
             "Cell voltage (V)",
             min_value=0.0,
             value=3.2,
             step=0.1,
-            key="guided_voltage",
+            key="Simple_voltage",
         )
 
-    fe_valid = guided_fe_status(guided_product_fe, guided_h2_fe)
-    fe_map = build_guided_fe_map(guided_product, guided_product_fe, guided_h2_fe)
-    utilization_fraction = guided_utilization_pct / 100.0
-    guided_stoich = 1.0 / max(utilization_fraction, EPS)
+    fe_valid = Simple_fe_status(Simple_product_fe, Simple_h2_fe)
+    fe_map = build_Simple_fe_map(Simple_product, Simple_product_fe, Simple_h2_fe)
+    utilization_fraction = Simple_utilization_pct / 100.0
+    Simple_stoich = 1.0 / max(utilization_fraction, EPS)
 
-    if guided_task == "production":
+    if Simple_task == "production":
         st.markdown("### Step 3 — Enter electrode area")
         area_col, context_col = st.columns([1, 2])
         with area_col:
-            guided_area_cm2 = st.number_input(
+            Simple_area_cm2 = st.number_input(
                 "Active area per cell (cm²)",
                 min_value=0.0,
                 value=100.0,
                 step=5.0,
-                key="guided_area",
+                key="Simple_area",
             )
         with context_col:
             st.caption(
                 f"CHEESE will evaluate {int(n_units_global)} identical cell(s) at "
-                f"{guided_j:,.1f} mA/cm². The utilization input corresponds to "
-                f"a stoichiometric feed ratio S = {guided_stoich:.2f}."
+                f"{Simple_j:,.1f} mA/cm². The utilization input corresponds to "
+                f"a stoichiometric feed ratio S = {Simple_stoich:.2f}."
             )
 
         if not fe_valid:
             return
-        if guided_area_cm2 <= EPS or guided_j <= EPS:
+        if Simple_area_cm2 <= EPS or Simple_j <= EPS:
             st.warning("Enter a positive electrode area and current density to calculate production.")
             return
-        if guided_product_fe <= EPS:
+        if Simple_product_fe <= EPS:
             st.warning("Enter a nonzero FE for the selected carbon product.")
             return
 
-        guided_inputs = ElectrolyzerInputs(
-            area_value=guided_area_cm2,
+        Simple_inputs = ElectrolyzerInputs(
+            area_value=Simple_area_cm2,
             area_unit="cm²",
-            j_value=guided_j,
+            j_value=Simple_j,
             j_unit="mA/cm²",
-            V_cell=guided_voltage,
+            V_cell=Simple_voltage,
             fe_map_pct=fe_map,
             n_units=int(n_units_global),
             molar_vol_L=mv_L_per_mol,
         )
-        guided_core = compute_core_products(guided_inputs)
-        co2_min_slpm = guided_core["CO2_min_slpm"]
+        Simple_core = compute_core_products(Simple_inputs)
+        co2_min_slpm = Simple_core["CO2_min_slpm"]
         co2_in_slpm = co2_min_slpm / max(utilization_fraction, EPS)
         unreacted_co2_slpm = max(0.0, co2_in_slpm - co2_min_slpm)
-        gas_products_slpm = sum(guided_core.get(f"{p}_slpm", 0.0) for p in GASES)
+        gas_products_slpm = sum(Simple_core.get(f"{p}_slpm", 0.0) for p in GASES)
         gas_outlet_slpm = unreacted_co2_slpm + gas_products_slpm
-        product_value, product_unit = guided_product_rate(guided_core, guided_product)
-        power_kW = guided_core["I_total_A"] * guided_voltage / 1000.0
+        product_value, product_unit = Simple_product_rate(Simple_core, Simple_product)
+        power_kW = Simple_core["I_total_A"] * Simple_voltage / 1000.0
 
         st.markdown("### Step 4 — Read the result")
         r1, r2, r3 = st.columns(3)
         with r1:
             st.metric(
-                f"{friendly_product_name(guided_product)} production",
+                f"{friendly_product_name(Simple_product)} production",
                 f"{product_value} {product_unit}",
             )
         with r2:
             st.metric(f"Required CO₂ inlet ({GAS_FLOW_UNIT})", format_gas_flow(co2_in_slpm))
         with r3:
-            st.metric("CO₂ utilization", f"{guided_utilization_pct:.1f}%")
+            st.metric("CO₂ utilization", f"{Simple_utilization_pct:.1f}%")
 
         r4, r5, r6 = st.columns(3)
         with r4:
-            st.metric("Total current", f"{guided_core['I_total_A']:,.2f} A")
+            st.metric("Total current", f"{Simple_core['I_total_A']:,.2f} A")
         with r5:
             st.metric("Electrical power", f"{power_kW:,.3f} kW")
         with r6:
             st.metric(f"Estimated gas outlet ({GAS_FLOW_UNIT})", format_gas_flow(gas_outlet_slpm))
 
         st.success(
-            f"At {guided_area_cm2:,.1f} cm² per cell, {int(n_units_global)} cell(s), "
-            f"{guided_j:,.1f} mA/cm², and {guided_product_fe:.1f}% "
-            f"{friendly_product_name(guided_product)} FE, the system produces approximately "
+            f"At {Simple_area_cm2:,.1f} cm² per cell, {int(n_units_global)} cell(s), "
+            f"{Simple_j:,.1f} mA/cm², and {Simple_product_fe:.1f}% "
+            f"{friendly_product_name(Simple_product)} FE, the system produces approximately "
             f"{product_value} {product_unit} and requires {format_gas_flow(co2_in_slpm)} "
-            f"{GAS_FLOW_UNIT} of CO₂ at {guided_utilization_pct:.1f}% utilization."
+            f"{GAS_FLOW_UNIT} of CO₂ at {Simple_utilization_pct:.1f}% utilization."
         )
 
         st.markdown(
-            f"**Calculation basis:** {guided_area_cm2:,.1f} cm²/cell · "
-            f"{int(n_units_global)} cell(s) · {guided_j:,.1f} mA/cm² · "
-            f"{guided_voltage:.2f} V · {guided_product_fe:.1f}% "
-            f"{friendly_product_name(guided_product)} FE · {guided_h2_fe:.1f}% H₂ FE · "
+            f"**Calculation basis:** {Simple_area_cm2:,.1f} cm²/cell · "
+            f"{int(n_units_global)} cell(s) · {Simple_j:,.1f} mA/cm² · "
+            f"{Simple_voltage:.2f} V · {Simple_product_fe:.1f}% "
+            f"{friendly_product_name(Simple_product)} FE · {Simple_h2_fe:.1f}% H₂ FE · "
             f"{basis_label.split('—')[0].strip()} dry gas"
         )
 
@@ -978,30 +978,30 @@ def render_guided_mode() -> None:
         st.markdown("### Step 3 — Enter the available CO₂ flow")
         sizing1, sizing2 = st.columns([1, 2])
         with sizing1:
-            guided_co2_in_display = gas_flow_number_input(
+            Simple_co2_in_display = gas_flow_number_input(
                 "Available CO₂ inlet",
                 default_slpm=0.100,
                 step_slpm=0.005,
-                key="guided_co2_inlet",
+                key="Simple_co2_inlet",
             )
-            guided_co2_in_slpm = display_to_slpm(guided_co2_in_display)
+            Simple_co2_in_slpm = display_to_slpm(Simple_co2_in_display)
         with sizing2:
             st.caption(
-                f"At {guided_utilization_pct:.1f}% utilization, the product-forming CO₂ rate is "
-                f"{format_gas_flow(guided_co2_in_slpm * utilization_fraction)} {GAS_FLOW_UNIT}. "
+                f"At {Simple_utilization_pct:.1f}% utilization, the product-forming CO₂ rate is "
+                f"{format_gas_flow(Simple_co2_in_slpm * utilization_fraction)} {GAS_FLOW_UNIT}. "
                 f"CHEESE will divide the required total area across {int(n_units_global)} identical cell(s)."
             )
 
         if not fe_valid:
             return
-        if guided_co2_in_slpm <= EPS or guided_j <= EPS:
+        if Simple_co2_in_slpm <= EPS or Simple_j <= EPS:
             st.warning("Enter a positive CO₂ inlet and current density to size the electrode.")
             return
-        if guided_product_fe <= EPS:
+        if Simple_product_fe <= EPS:
             st.warning("Enter a nonzero FE for the selected carbon product.")
             return
 
-        co2_min_slpm = guided_co2_in_slpm * utilization_fraction
+        co2_min_slpm = Simple_co2_in_slpm * utilization_fraction
         co2_min_mol_s = slpm_to_mol_s(co2_min_slpm, mv_L_per_mol)
         carbon_per_amp_factor = sum(
             fe_to_frac(fe_map.get(product, 0.0))
@@ -1015,24 +1015,24 @@ def render_guided_mode() -> None:
             return
 
         total_current_A = co2_min_mol_s * F / carbon_per_amp_factor
-        j_A_m2 = to_A_per_m2(guided_j, "mA/cm²")
+        j_A_m2 = to_A_per_m2(Simple_j, "mA/cm²")
         total_area_m2 = total_current_A / max(j_A_m2, EPS)
         total_area_cm2 = total_area_m2 * 1e4
         area_per_cell_cm2 = total_area_cm2 / max(int(n_units_global), 1)
 
-        guided_inputs = ElectrolyzerInputs(
+        Simple_inputs = ElectrolyzerInputs(
             area_value=area_per_cell_cm2,
             area_unit="cm²",
-            j_value=guided_j,
+            j_value=Simple_j,
             j_unit="mA/cm²",
-            V_cell=guided_voltage,
+            V_cell=Simple_voltage,
             fe_map_pct=fe_map,
             n_units=int(n_units_global),
             molar_vol_L=mv_L_per_mol,
         )
-        guided_core = compute_core_products(guided_inputs)
-        product_value, product_unit = guided_product_rate(guided_core, guided_product)
-        power_kW = total_current_A * guided_voltage / 1000.0
+        Simple_core = compute_core_products(Simple_inputs)
+        product_value, product_unit = Simple_product_rate(Simple_core, Simple_product)
+        power_kW = total_current_A * Simple_voltage / 1000.0
 
         st.markdown("### Step 4 — Read the result")
         r1, r2, r3 = st.columns(3)
@@ -1042,7 +1042,7 @@ def render_guided_mode() -> None:
             st.metric("Total active area", f"{total_area_cm2:,.1f} cm²")
         with r3:
             st.metric(
-                f"{friendly_product_name(guided_product)} production",
+                f"{friendly_product_name(Simple_product)} production",
                 f"{product_value} {product_unit}",
             )
 
@@ -1055,18 +1055,18 @@ def render_guided_mode() -> None:
             st.metric(f"Product-forming CO₂ ({GAS_FLOW_UNIT})", format_gas_flow(co2_min_slpm))
 
         st.success(
-            f"To process {format_gas_flow(guided_co2_in_slpm)} {GAS_FLOW_UNIT} CO₂ at "
-            f"{guided_utilization_pct:.1f}% utilization and {guided_j:,.1f} mA/cm², "
+            f"To process {format_gas_flow(Simple_co2_in_slpm)} {GAS_FLOW_UNIT} CO₂ at "
+            f"{Simple_utilization_pct:.1f}% utilization and {Simple_j:,.1f} mA/cm², "
             f"the model requires approximately {area_per_cell_cm2:,.1f} cm² per cell "
             f"across {int(n_units_global)} cell(s)."
         )
 
         st.markdown(
-            f"**Calculation basis:** {format_gas_flow(guided_co2_in_slpm)} {GAS_FLOW_UNIT} CO₂ inlet · "
-            f"{guided_utilization_pct:.1f}% utilization · {int(n_units_global)} cell(s) · "
-            f"{guided_j:,.1f} mA/cm² · {guided_voltage:.2f} V · "
-            f"{guided_product_fe:.1f}% {friendly_product_name(guided_product)} FE · "
-            f"{guided_h2_fe:.1f}% H₂ FE · {basis_label.split('—')[0].strip()} dry gas"
+            f"**Calculation basis:** {format_gas_flow(Simple_co2_in_slpm)} {GAS_FLOW_UNIT} CO₂ inlet · "
+            f"{Simple_utilization_pct:.1f}% utilization · {int(n_units_global)} cell(s) · "
+            f"{Simple_j:,.1f} mA/cm² · {Simple_voltage:.2f} V · "
+            f"{Simple_product_fe:.1f}% {friendly_product_name(Simple_product)} FE · "
+            f"{Simple_h2_fe:.1f}% H₂ FE · {basis_label.split('—')[0].strip()} dry gas"
         )
 
     with st.expander("How was this calculated?", expanded=False):
@@ -1078,11 +1078,11 @@ def render_guided_mode() -> None:
         st.latex(r"\dot{n}_{CO_2,product}=\sum_i \nu_{CO_2,i}\dot{n}_i")
         st.latex(r"U_{CO_2}=\frac{\dot{n}_{CO_2,product}}{\dot{n}_{CO_2,in}},\qquad S=\frac{1}{U_{CO_2}}")
         st.caption(
-            "Guided Mode assumes one primary carbon product plus H₂, dry standard gas flow, "
+            "Simple Mode assumes one primary carbon product plus H₂, dry standard gas flow, "
             "identical cells, and no explicit carbonate crossover, recycle, humidity, or pressure correction."
         )
 
-    with st.expander("Terms used in Guided Mode", expanded=False):
+    with st.expander("Terms used in Simple Mode", expanded=False):
         st.markdown(
             "- **Faradaic efficiency (FE):** fraction of electrical current assigned to a product.\n"
             "- **Current density:** current divided by active electrode area.\n"
@@ -1097,8 +1097,8 @@ def render_guided_mode() -> None:
     )
 
 
-if IS_GUIDED:
-    render_guided_mode()
+if IS_Simple:
+    render_Simple_mode()
 else:
     # -------------------- Tabs --------------------
     tab_instructions, tab_calc, tab_carbon, tab_size, tab_s2, tab_s3, tab_durability = st.tabs([
