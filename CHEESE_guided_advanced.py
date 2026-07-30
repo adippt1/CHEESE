@@ -1979,7 +1979,7 @@ else:
 
         st.markdown("---")
         st.markdown("### Product-specific energy")
-        st.caption("This section uses the shared FE split and electrochemical operating point above, independent of which carbon workflow is open.")
+        # st.caption("This section uses the shared FE split and electrochemical operating point above, independent of which carbon workflow is open.")
         energy_df = product_specific_energy_rows(cb_core, cb_fe_map, cb_V)
         if energy_df.empty:
             st.info("Enter a nonzero FE to calculate product-specific energy metrics.")
