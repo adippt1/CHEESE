@@ -1,5 +1,7 @@
 # CHEESE — CO₂ Handling & Electrolyzer Efficiency Scaling Evaluator
-# Tagline: Because scaling electrolysis shouldn’t be this gouda! 🧀
+# Mode-specific taglines:
+# Simple: Because scaling electrolysis shouldn’t be this gouda!
+# Advanced: Because serious scaling deserves the full CHEESEboard!
 # Author: Aditya Prajapati 
 # Copyright (c) 2025 Aditya Prajapati
 # Dependencies: streamlit, numpy, pandas, altair, plotly
@@ -20,7 +22,6 @@ st.set_page_config(
 )
 
 st.title("🧀 CHEESE — CO₂ Handling & Electrolyzer Efficiency Scaling Evaluator")
-st.caption("Because scaling electrolysis shouldn’t be this gouda!")
 
 st.markdown(
     """
@@ -72,6 +73,13 @@ UI_MODE = st.sidebar.radio(
     ),
 )
 IS_Simple = UI_MODE == "Simple"
+
+MODE_TAGLINE = (
+    "Because scaling electrolysis shouldn’t be this gouda!"
+    if IS_Simple
+    else "Because serious scaling deserves the full CHEESEboard!"
+)
+st.caption(MODE_TAGLINE)
 
 st.sidebar.caption(
     "Simple Mode is intended for quick estimates and new users. "
