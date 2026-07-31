@@ -726,66 +726,8 @@ def cost_per_area_to_per_cm2(cost_value: float, cost_unit: str) -> float:
     return float(cost_value) if cost_unit == "$/cm²" else float(cost_value) / 1e4
 
 
-def make_test_stand_figure(n_cells: int) -> go.Figure:
-    """Create a simplified electrolysis test-stand process schematic."""
-    n_cells = max(1, int(n_cells))
-    cell_label = "Single electrolysis cell" if n_cells == 1 else f"{n_cells}-cell electrolyzer stack"
-
-    fig = go.Figure()
-
-    def add_box(x0, x1, y0, y1, label, fill, line="#263238", font_size=13):
-        fig.add_shape(
-            type="rect", x0=x0, x1=x1, y0=y0, y1=y1,
-            fillcolor=fill, line=dict(color=line, width=1.5),
-            layer="below",
-        )
-        fig.add_annotation(
-            x=(x0 + x1) / 2, y=(y0 + y1) / 2,
-            text=label, showarrow=False, align="center",
-            font=dict(size=font_size, color="black", family="Arial, Helvetica, sans-serif"),
-        )
-
-    def add_arrow(x0, y0, x1, y1, label=""):
-        fig.add_annotation(
-            x=x1, y=y1, ax=x0, ay=y0,
-            xref="x", yref="y", axref="x", ayref="y",
-            showarrow=True, arrowhead=3, arrowsize=1.1, arrowwidth=2,
-            arrowcolor="#37474F", text=label,
-            font=dict(size=11, color="black"),
-        )
-
-    add_box(0.2, 1.35, 3.7, 5.25, "CO₂ / gas<br>supply", "#D9EAF7")
-    add_box(1.75, 2.95, 3.95, 5.00, "Flow<br>controller", "#E8F1F8")
-    add_box(4.05, 6.25, 2.15, 4.85, cell_label, "#FFF1C7", font_size=14)
-    add_box(7.25, 9.25, 3.85, 5.05, "Gas analysis<br>GC / flow meter", "#E7F4E4")
-    add_box(0.25, 1.55, 0.35, 1.70, "Electrolyte<br>reservoir", "#DFF3F0")
-    add_box(2.05, 3.00, 0.55, 1.50, "Pump", "#E7F7F4")
-    add_box(7.20, 9.25, 0.75, 2.05, "Product collection /<br>separator", "#F7E7EF")
-    add_box(4.25, 6.05, 5.35, 6.25, "Power supply /<br>potentiostat", "#F2E7FA")
-
-    add_arrow(1.35, 4.48, 1.75, 4.48)
-    add_arrow(2.95, 4.48, 4.05, 4.48, "gas in")
-    add_arrow(6.25, 4.48, 7.25, 4.48, "gas out")
-    add_arrow(1.55, 1.05, 2.05, 1.05)
-    add_arrow(3.00, 1.05, 4.05, 2.75, "liquid in")
-    add_arrow(6.25, 2.75, 7.20, 1.45, "liquid out")
-    add_arrow(5.15, 5.35, 5.15, 4.85, "DC")
-
-    fig.update_xaxes(visible=False, range=[0, 9.5], fixedrange=True)
-    fig.update_yaxes(visible=False, range=[0, 6.5], fixedrange=True)
-    fig.update_layout(
-        title=dict(text="Simplified electrolysis test stand", x=0.02, xanchor="left", font=dict(size=17, color="black")),
-        height=390,
-        margin=dict(l=10, r=10, t=55, b=10),
-        paper_bgcolor="white",
-        plot_bgcolor="white",
-        showlegend=False,
-    )
-    return fig
-
-
 def make_cell_stack_figure(n_cells: int, active_area_cm2: float) -> go.Figure:
-    """Create an exploded single-cell or representative stack-layer schematic."""
+    """Create an exploded single-cell or stack-layer schematic with bipolar plates."""
     n_cells = max(1, int(n_cells))
     shown_cells = min(n_cells, 5)
 
@@ -794,15 +736,17 @@ def make_cell_stack_figure(n_cells: int, active_area_cm2: float) -> go.Figure:
         "Anode": "#F4A261",
         "Membrane": "#F6E58D",
         "Cathode": "#70A1D7",
+        "Bipolar plate": "#7F8C8D",
     }
 
     fig = go.Figure()
     x = 0.25
-    plate_w = 0.42
+    end_plate_w = 0.42
+    bipolar_plate_w = 0.10
     layer_gap = 0.08
     layer_widths = {"Anode": 0.34, "Membrane": 0.18, "Cathode": 0.34}
 
-    def add_layer(x0, width, label, color, text=""):
+    def add_layer(x0, width, color, text="", font_size=11):
         fig.add_shape(
             type="rect", x0=x0, x1=x0 + width, y0=1.05, y1=5.25,
             fillcolor=color, line=dict(color="#263238", width=1.2),
@@ -810,30 +754,34 @@ def make_cell_stack_figure(n_cells: int, active_area_cm2: float) -> go.Figure:
         if text:
             fig.add_annotation(
                 x=x0 + width / 2, y=3.15, text=text, showarrow=False,
-                textangle=-90, font=dict(size=11, color="black"),
+                textangle=-90, font=dict(size=font_size, color="black"),
             )
 
-    add_layer(x, plate_w, "End plate", colors["End plate"], "End plate")
-    x += plate_w + 0.15
+    add_layer(x, end_plate_w, colors["End plate"], "End plate")
+    x += end_plate_w + 0.15
 
     for cell_idx in range(shown_cells):
         for name in ("Anode", "Membrane", "Cathode"):
             width = layer_widths[name]
-            short = {"Anode": "Anode", "Membrane": "Membrane", "Cathode": "Cathode"}[name]
-            add_layer(x, width, name, colors[name], short)
+            add_layer(x, width, colors[name], name)
             x += width + layer_gap
-        if cell_idx < shown_cells - 1:
-            x += 0.12
 
-    add_layer(x, plate_w, "End plate", colors["End plate"], "End plate")
-    x_end = x + plate_w
+        if cell_idx < shown_cells - 1:
+            add_layer(x, bipolar_plate_w, colors["Bipolar plate"], "BP", font_size=10)
+            x += bipolar_plate_w + layer_gap
+
+    add_layer(x, end_plate_w, colors["End plate"], "End plate")
+    x_end = x + end_plate_w
 
     if n_cells > shown_cells:
-        subtitle = f"Representative view: {shown_cells} of {n_cells} repeating cells shown"
+        subtitle = (
+            f"Representative view: {shown_cells} of {n_cells} cells shown; "
+            f"full stack contains {n_cells - 1} bipolar plates"
+        )
     elif n_cells == 1:
-        subtitle = "One anode + one membrane + one cathode"
+        subtitle = "One anode + one membrane + one cathode; no bipolar plate required"
     else:
-        subtitle = f"{n_cells} repeating cells; one membrane per cell"
+        subtitle = f"{n_cells} repeating cells with {n_cells - 1} thin bipolar plate(s) between cells"
 
     fig.add_annotation(
         x=(0.25 + x_end) / 2, y=5.72,
@@ -842,8 +790,13 @@ def make_cell_stack_figure(n_cells: int, active_area_cm2: float) -> go.Figure:
         font=dict(size=13, color="black"),
     )
 
+    legend_names = ["Anode", "Membrane", "Cathode"]
+    if n_cells > 1:
+        legend_names.append("Bipolar plate")
+    legend_names.append("End plate")
+
     legend_x = 0.35
-    for name in ("Anode", "Membrane", "Cathode", "End plate"):
+    for name in legend_names:
         fig.add_shape(
             type="rect", x0=legend_x, x1=legend_x + 0.22, y0=0.25, y1=0.55,
             fillcolor=colors[name], line=dict(color="#263238", width=0.8),
@@ -852,20 +805,19 @@ def make_cell_stack_figure(n_cells: int, active_area_cm2: float) -> go.Figure:
             x=legend_x + 0.28, y=0.40, text=name, showarrow=False, xanchor="left",
             font=dict(size=11, color="black"),
         )
-        legend_x += 1.35
+        legend_x += 1.55 if name == "Bipolar plate" else 1.35
 
-    fig.update_xaxes(visible=False, range=[0, max(x_end + 0.25, 5.8)], fixedrange=True)
+    fig.update_xaxes(visible=False, range=[0, max(x_end + 0.25, 6.8)], fixedrange=True)
     fig.update_yaxes(visible=False, range=[0, 6.15], fixedrange=True)
     fig.update_layout(
-        title=dict(text="Cell / stack material layers", x=0.02, xanchor="left", font=dict(size=17, color="black")),
-        height=390,
-        margin=dict(l=10, r=10, t=55, b=10),
+        title=dict(text="Exploded cell / stack material layers", x=0.02, xanchor="left", font=dict(size=17, color="black")),
+        height=430,
+        margin=dict(l=10, r=10, t=58, b=10),
         paper_bgcolor="white",
         plot_bgcolor="white",
         showlegend=False,
     )
     return fig
-
 
 def render_cost_per_test() -> None:
     """Render a simple materials-cost allocation model in both UI modes."""
@@ -907,29 +859,27 @@ def render_cost_per_test() -> None:
         )
     with c3:
         st.metric("Cells in test", f"{n_cells:,d}")
-        st.caption("Change the cell/stack count in the sidebar. One anode, one cathode, and one membrane are counted per cell.")
+        st.metric("Bipolar plates", f"{max(n_cells - 1, 0):,d}")
+        st.caption(
+            "Change the cell/stack count in the sidebar. One anode, one cathode, and one membrane are counted per cell; bipolar plates are counted only between adjacent cells."
+        )
 
     active_area_cm2 = tea_area_value if tea_area_unit == "cm²" else tea_area_value * 1e4
     purchased_area_cm2 = active_area_cm2 * material_area_factor
     total_active_area_cm2 = active_area_cm2 * n_cells
 
-    visual_left, visual_right = st.columns(2)
-    with visual_left:
-        st.plotly_chart(
-            make_test_stand_figure(n_cells),
-            use_container_width=True,
-            config={"displayModeBar": False, "responsive": True},
-        )
-    with visual_right:
-        st.plotly_chart(
-            make_cell_stack_figure(n_cells, active_area_cm2),
-            use_container_width=True,
-            config={"displayModeBar": False, "responsive": True},
-        )
-
-    st.caption(
-        "The diagrams are conceptual. This tab prices the electrochemical material layers only; test-stand hardware is excluded unless entered as other consumables."
+    st.plotly_chart(
+        make_cell_stack_figure(n_cells, active_area_cm2),
+        use_container_width=True,
+        config={"displayModeBar": False, "responsive": True},
     )
+
+    if n_cells > 1:
+        st.caption(
+            f"The exploded view includes {n_cells - 1} thin bipolar plate(s), one between each pair of adjacent cells."
+        )
+    else:
+        st.caption("A single cell does not require an inter-cell bipolar plate.")
 
     st.markdown("### 2. Enter area-normalized material costs")
     anode_col, membrane_col, cathode_col = st.columns(3)
@@ -1006,6 +956,39 @@ def render_cost_per_test() -> None:
             help="Use 1 for a single-use cathode. Larger values prorate the purchase cost across repeated tests.",
         )
 
+    bipolar_count = max(n_cells - 1, 0)
+    bipolar_cost = 0.0
+    bipolar_cost_unit = "$/m²"
+    bipolar_reuse = 1
+    if bipolar_count > 0:
+        st.markdown("#### Bipolar plates")
+        bp1, bp2, bp3 = st.columns(3)
+        with bp1:
+            bipolar_cost = st.number_input(
+                "Bipolar plate cost",
+                min_value=0.0,
+                value=0.0,
+                step=0.01,
+                key="tea_bipolar_cost",
+            )
+        with bp2:
+            bipolar_cost_unit = st.selectbox(
+                "Bipolar plate cost basis",
+                options=["$/cm²", "$/m²"],
+                index=1,
+                key="tea_bipolar_cost_unit",
+            )
+        with bp3:
+            bipolar_reuse = st.number_input(
+                "Tests per bipolar plate",
+                min_value=1,
+                value=1,
+                step=1,
+                key="tea_bipolar_reuse",
+                help="Enter the number of tests over which the bipolar-plate purchase cost should be allocated.",
+            )
+        st.caption(f"This {n_cells}-cell stack uses {bipolar_count} thin bipolar plate(s).")
+
     with st.expander("Other per-test material costs", expanded=False):
         other_consumables = st.number_input(
             "Gaskets, electrolyte, tubing, fittings, sample vials, and other consumables ($/test)",
@@ -1021,17 +1004,22 @@ def render_cost_per_test() -> None:
     anode_per_cm2 = cost_per_area_to_per_cm2(anode_cost, anode_cost_unit)
     membrane_per_cm2 = cost_per_area_to_per_cm2(membrane_cost, membrane_cost_unit)
     cathode_per_cm2 = cost_per_area_to_per_cm2(cathode_cost, cathode_cost_unit)
+    bipolar_per_cm2 = cost_per_area_to_per_cm2(bipolar_cost, bipolar_cost_unit) if bipolar_count > 0 else 0.0
 
     component_inputs = [
-        ("Anode", anode_cost, anode_cost_unit, anode_per_cm2, int(anode_reuse)),
-        ("Membrane", membrane_cost, membrane_cost_unit, membrane_per_cm2, int(membrane_reuse)),
-        ("Cathode", cathode_cost, cathode_cost_unit, cathode_per_cm2, int(cathode_reuse)),
+        ("Anode", anode_cost, anode_cost_unit, anode_per_cm2, int(anode_reuse), n_cells),
+        ("Membrane", membrane_cost, membrane_cost_unit, membrane_per_cm2, int(membrane_reuse), n_cells),
+        ("Cathode", cathode_cost, cathode_cost_unit, cathode_per_cm2, int(cathode_reuse), n_cells),
     ]
+    if bipolar_count > 0:
+        component_inputs.append(
+            ("Bipolar plate", bipolar_cost, bipolar_cost_unit, bipolar_per_cm2, int(bipolar_reuse), bipolar_count)
+        )
 
     rows = []
-    for component, entered_cost, entered_unit, cost_per_cm2, reuse_count in component_inputs:
+    for component, entered_cost, entered_unit, cost_per_cm2, reuse_count, item_count in component_inputs:
         purchase_cost_per_item = purchased_area_cm2 * cost_per_cm2
-        full_stack_purchase_cost = purchase_cost_per_item * n_cells
+        full_stack_purchase_cost = purchase_cost_per_item * item_count
         allocated_cost = full_stack_purchase_cost / max(reuse_count, 1)
         rows.append({
             "Component": component,
@@ -1039,7 +1027,7 @@ def render_cost_per_test() -> None:
             "Entered basis": entered_unit,
             "Cost ($/cm²)": cost_per_cm2,
             "Purchased area per item (cm²)": purchased_area_cm2,
-            "Items in test": n_cells,
+            "Items in test": item_count,
             "Full purchase cost ($)": full_stack_purchase_cost,
             "Tests per item": reuse_count,
             "Allocated cost per test ($)": allocated_cost,
@@ -1082,7 +1070,7 @@ def render_cost_per_test() -> None:
     st.markdown(
         f"**Calculation basis:** {active_area_cm2:,.1f} cm² active area/cell · "
         f"{purchased_area_cm2:,.1f} cm² purchased area/component · {n_cells:,d} cell(s) · "
-        f"{total_active_area_cm2:,.1f} cm² total active area"
+        f"{max(n_cells - 1, 0):,d} bipolar plate(s) · {total_active_area_cm2:,.1f} cm² total active area"
     )
 
     if total_cost_per_test > EPS:
@@ -1114,7 +1102,7 @@ def render_cost_per_test() -> None:
 
     with st.expander("View calculation table and equations", expanded=False):
         st.latex(r"A_{purchased}=A_{active}\,f_{area}")
-        st.latex(r"C_{i,test}=\frac{N_{cells}\,A_{purchased}\,p_i}{N_{reuse,i}}")
+        st.latex(r"C_{i,test}=\frac{N_i\,A_{purchased}\,p_i}{N_{reuse,i}}")
         st.latex(r"C_{test}=\sum_i C_{i,test}+C_{other}")
         st.dataframe(
             cost_df,
