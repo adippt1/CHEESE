@@ -4,11 +4,11 @@
 # Advanced: Because serious scaling deserves the full CHEESEboard!
 # Author: Aditya Prajapati
 #
-# Open-source license: BSD-3-Clause
-# RELEASE NOTE: Before public release, replace the bracketed fields below
-# with the exact copyright and LLNL-CODE language approved by LLNL.
-# Copyright (c) [YEAR] [COPYRIGHT HOLDER APPROVED BY LLNL]
-# LLNL-CODE-[PENDING]
+# Open-source license: BSD-3-Clause 
+# Copyright (c) 2026, Lawrence Livermore National Security, LLC
+# All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+# LLNL-CODE-2023675
 #
 # Dependencies: streamlit, numpy, pandas, altair, plotly
 
