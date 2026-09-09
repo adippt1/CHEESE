@@ -5,7 +5,7 @@
 CHEESE is an open-source Streamlit dashboard that translates laboratory-scale
 CO₂ electrolysis performance into engineering-scale material, flow, energy,
 carbon, durability, and screening-level cost requirements. It connects familiar
-electrochemical inputs—such as active area, current density, cell voltage,
+electrochemical inputs like active area, current density, cell voltage,
 Faradaic efficiency, and CO₂ flow—to quantities needed for experimental
 planning and scale-up.
 
@@ -70,41 +70,6 @@ open-source licenses are summarized in `THIRD_PARTY_LICENSES.md`.
 Download or clone this repository and keep the repository files together in
 one directory.
 
-### Windows: guided installation
-
-1. Install Python from [python.org](https://www.python.org/downloads/windows/).
-   During installation, select **Add python.exe to PATH**.
-2. Double-click `Install_CHEESE.bat` once. This creates a private `.venv`
-   environment and installs the required Python packages.
-3. Double-click `Run_CHEESE.bat` whenever you want to start CHEESE.
-4. Keep the command window open while using the dashboard. Close it, or press
-   `Ctrl+C`, to stop CHEESE.
-
-### Manual installation: Windows, macOS, or Linux
-
-Create a virtual environment from the repository directory:
-
-```bash
-python -m venv .venv
-```
-
-On macOS or Linux, install the dependencies and start CHEESE with:
-
-```bash
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python -m streamlit run CHEESE.py
-```
-
-On Windows, use:
-
-```powershell
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe -m streamlit run CHEESE.py
-```
-
-If `python` is not recognized on macOS or Linux, use `python3` when creating the
-virtual environment. A browser window should open automatically after CHEESE
-starts.
 
 ## Basic workflow
 
@@ -117,30 +82,6 @@ starts.
    energy analysis, stack sensitivity, crossover analysis, real-gas
    interpretation, and durability modeling.
 
-## Calculation basis
-
-CHEESE first calculates aggregate current from the active area and current
-density:
-
-```text
-I_total = N_cell × j × A_cell
-```
-
-It then applies Faraday's law to calculate the molar production rate of each
-product:
-
-```text
-ṅ_i = I_total × FE_i / (n_e,i × F)
-```
-
-Carbon-containing products are mapped to their corresponding CO₂-equivalent
-consumption. Gas flows are reported using the selected STP or SATP molar-volume
-basis. Optional real-gas inputs translate the dry standard flow into an actual
-wet volumetric flow without changing the underlying electrochemical molar
-balance.
-
-Additional equations, assumptions, definitions, and checks are provided within
-the relevant dashboard tabs.
 
 ## Scope and limitations
 
@@ -167,7 +108,7 @@ meantime, use the repository citation metadata in `CITATION.cff`.
 
 **Aditya Prajapati**  
 Lawrence Livermore National Laboratory  
-[LLNL profile](https://people.llnl.gov/prajapati3)
+[Read more...](https://people.llnl.gov/prajapati3)
 
 ## Getting involved
 
