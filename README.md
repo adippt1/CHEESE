@@ -1,12 +1,12 @@
 # CHEESE 🧀
 
-**CO₂ Handling & Electrolyzer Engineering Scale-up Evaluator**
+**CO<sub>2</sub> Handling & Electrolyzer Engineering Scale-up Evaluator**
 
 CHEESE is an open-source Streamlit dashboard that translates laboratory-scale
-CO₂ electrolysis performance into engineering-scale material, flow, energy,
+CO<sub>2</sub> electrolysis performance into engineering-scale material, flow, energy,
 carbon, durability, and screening-level cost requirements. It connects familiar
 electrochemical inputs like active area, current density, cell voltage,
-Faradaic efficiency, and CO₂ flow—to quantities needed for experimental
+Faradaic efficiency, and CO<sub>2</sub> flow—to quantities needed for experimental
 planning and scale-up.
 
 CHEESE provides separate **Simple** and **Advanced** interfaces so that new
@@ -18,11 +18,11 @@ calculation framework.
 ### Simple Mode
 
 Simple Mode provides a guided workflow for rapid estimates involving one
-primary carbon product and H₂.
+primary carbon product and H<sub>2</sub>.
 
 - Predict product formation from electrode area
-- Size electrode area from available CO₂ flow
-- Calculate CO₂ feed requirements and product-forming utilization
+- Size electrode area from available CO<sub>2</sub> flow
+- Calculate CO<sub>2</sub> feed requirements and product-forming utilization
 - Calculate total current and direct-current electrical power
 - Estimate dry gas outlet flow
 - Estimate materials cost per electrolyzer test
@@ -33,20 +33,20 @@ Advanced Mode exposes the complete engineering calculation framework.
 
 - Multi-product Faradaic-efficiency distributions
 - Gas- and liquid-product production rates
-- CO₂ stoichiometry, feed requirements, and utilization
+- CO<sub>2</sub> stoichiometry, feed requirements, and utilization
 - Reverse electrode-area sizing and stack sizing
 - Planning and experimental carbon-balance workflows
 - Carbon recovery, recycle, purge, and inorganic-carbon crossover estimates
 - Product-specific electricity consumption and LHV/HHV efficiency estimates
 - Actual wet-flow interpretation using temperature, humidity, and pressure
-- CO₂-utilization and outlet-composition sensitivity analysis
-- Area × stack sensitivity heatmaps and CO₂-supply constraints
+- CO<sub>2</sub>-utilization and outlet-composition sensitivity analysis
+- Area × stack sensitivity heatmaps and CO<sub>2</sub>-supply constraints
 - Carbon-flow Sankey diagrams
 - Materials cost per electrolyzer test
 - Durability, degradation, downtime, and stack-replacement analysis
 - Downloadable CSV result tables
 
-CHEESE includes built-in properties for CO, H₂, CH₄, C₂H₄, methanol, ethanol,
+CHEESE includes built-in properties for CO, H<sub>2</sub>, CH<sub>4</sub>, C<sub>2</sub>H<sub>4</sub>, methanol, ethanol,
 formate, and methylglyoxal.
 
 ## Requirements
@@ -74,8 +74,8 @@ one directory.
 ## Basic workflow
 
 1. Start in **Simple Mode** for a guided production or sizing calculation.
-2. Select the product, Faradaic efficiency, current density, cell voltage, CO₂
-   utilization, and either electrode area or available CO₂ flow.
+2. Select the product, Faradaic efficiency, current density, cell voltage, CO<sub>2</sub>
+   utilization, and either electrode area or available CO<sub>2</sub> flow.
 3. Review the calculated production, current, power, feed, outlet-flow, and
    sizing results.
 4. Switch to **Advanced Mode** for multi-product calculations, carbon and
