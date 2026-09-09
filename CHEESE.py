@@ -3091,4 +3091,4 @@ else:
 
 # -------------------- Footer --------------------
 st.markdown("---")
-st.caption("© 2025 Aditya Prajapati · CHEESE")
+st.caption("© 2026 LLNL · CHEESE")
