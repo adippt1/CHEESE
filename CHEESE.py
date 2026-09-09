@@ -22,7 +22,7 @@ import streamlit as st
 
 # -------------------- Page setup --------------------
 st.set_page_config(
-    page_title="CHEESE — CO<sub>2</sub> Handling for scaling",
+    page_title="CHEESE — $CO_2$ Handling for scaling",
     page_icon="🧀",
     layout="wide",
 )
