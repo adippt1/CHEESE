@@ -27,7 +27,7 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("🧀 CHEESE — CO<sub>2</sub> Handling & Electrolyzer Engineering Scale-up Evaluator")
+st.title(r"🧀 CHEESE — $\mathrm{CO_2}$ Handling & Electrolyzer Engineering Scale-up Evaluator")
 
 st.markdown(
     """
