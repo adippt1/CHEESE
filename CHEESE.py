@@ -27,7 +27,18 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title(r"🧀 CHEESE: $\mathrm{CO_2 Handling \& Electrolyzer Engineering Scale-up Evaluator}$ ")
+st.markdown("""
+<style>
+h1 .katex, h2 .katex, h3 .katex {
+    font-size: 1em;
+}
+h1 .katex *, h2 .katex *, h3 .katex * {
+    font-family: inherit !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.title(r"🧀 CHEESE: $\mathrm{CO_2}$ Handling & Electrolyzer Engineering Scale-up Evaluator")
 
 st.markdown(
     """
