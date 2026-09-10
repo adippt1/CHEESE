@@ -27,19 +27,11 @@ st.set_page_config(
     layout="wide",
 )
 
-st.markdown("""
-<style>
-h1 .katex, h2 .katex, h3 .katex {
-    font-size: 1em;
-}
-h1 .katex *, h2 .katex *, h3 .katex * {
-    font-family: inherit !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.title(r"🧀 CHEESE: CO$\mathrm{_2}$ Handling & Electrolyzer Engineering Scale-up Evaluator")
-
+st.markdown(
+    '<h1>🧀 CHEESE: CO<sub>2</sub> Handling &amp; Electrolyzer '
+    'Engineering Scale-up Evaluator</h1>',
+    unsafe_allow_html=True,
+)
 st.markdown(
     """
 <style>
