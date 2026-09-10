@@ -38,7 +38,7 @@ h1 .katex *, h2 .katex *, h3 .katex * {
 </style>
 """, unsafe_allow_html=True)
 
-st.title(r"🧀 CHEESE: $\mathrm{CO_2}$ Handling & Electrolyzer Engineering Scale-up Evaluator")
+st.title(r"🧀 CHEESE: CO$\mathrm{_2}$ Handling & Electrolyzer Engineering Scale-up Evaluator")
 
 st.markdown(
     """
