@@ -22,12 +22,12 @@ import streamlit as st
 
 # -------------------- Page setup --------------------
 st.set_page_config(
-    page_title="CHEESE — $CO_2$ Handling for scaling",
+    page_title="CHEESE: CO₂ Handling for scaling",
     page_icon="🧀",
     layout="wide",
 )
 
-st.title(r"🧀 CHEESE — $\mathrm{CO_2}$ Handling & Electrolyzer Engineering Scale-up Evaluator")
+st.title(r"🧀 CHEESE: $\mathrm{CO_2 Handling \& Electrolyzer Engineering Scale-up Evaluator}$ ")
 
 st.markdown(
     """
