@@ -6,7 +6,7 @@ CHEESE is an open-source Streamlit dashboard that translates laboratory-scale
 CO<sub>2</sub> electrolysis performance into engineering-scale material, flow, energy,
 carbon, durability, and screening-level cost requirements. It connects familiar
 electrochemical inputs like active area, current density, cell voltage,
-Faradaic efficiency, and CO<sub>2</sub> flow—to quantities needed for experimental
+Faradaic efficiency, and CO<sub>2</sub> flow, to quantities needed for experimental
 planning and scale-up.
 
 CHEESE provides separate **Simple** and **Advanced** interfaces so that new
