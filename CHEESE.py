@@ -1,4 +1,4 @@
-# CHEESE — CO₂ Handling & Electrolyzer Engineering Scale-up Evaluator
+# CHEESE — CO₂ Handling and Electrolyzer Efficiency Scaling Evaluator
 # Mode-specific taglines:
 # Simple: Because scaling electrolysis shouldn’t be this gouda!
 # Advanced: Because serious scaling deserves the full CHEESEboard!
@@ -22,14 +22,14 @@ import streamlit as st
 
 # -------------------- Page setup --------------------
 st.set_page_config(
-    page_title="CHEESE: CO₂ Handling for scaling",
+    page_title="CHEESE: CO₂ Handling and Electrolyzer Efficiency Scaling Evaluator",
     page_icon="🧀",
     layout="wide",
 )
 
 st.markdown(
-    '<h1>🧀 CHEESE: CO<sub>2</sub> Handling &amp; Electrolyzer '
-    'Engineering Scale-up Evaluator</h1>',
+    '<h1>🧀 CHEESE: CO<sub>2</sub> Handling and Electrolyzer '
+    'Efficiency Scaling Evaluator</h1>',
     unsafe_allow_html=True,
 )
 st.markdown(
@@ -142,7 +142,7 @@ if IS_Simple:
         )
 
     # Defaults retained for shared helper functions. Simple Mode does not expose
-    # real-gas corrections because they are intentionally part of Advanced Mode.
+    # gas-condition conversions because they are intentionally part of Advanced Mode.
     gas_temperature_C = 25.0
     gas_relative_humidity_pct = 0.0
     gas_outlet_pressure_bar_abs = 1.01325
@@ -171,9 +171,9 @@ else:
         key="gs_stack",
     )
     n_units_global = st.sidebar.number_input(
-        "Number of units in stack",
+        "Number of identical cells",
         min_value=1,
-        value=10,
+        value=1,
         step=1,
         key="gs_units",
     )
@@ -181,7 +181,7 @@ else:
     # Real gas settings are global because the same test conditions usually apply
     # across sizing, carbon-balance, and sensitivity calculations. Standard-flow
     # calculations remain on the selected STP/SATP basis.
-    with st.sidebar.expander("Real gas conditions (optional)", expanded=False):
+    with st.sidebar.expander("Gas temperature, pressure, and humidity", expanded=False):
         gas_temperature_C = st.number_input(
             "Gas temperature (°C)",
             min_value=-20.0, max_value=150.0, value=25.0, step=1.0,
@@ -275,19 +275,29 @@ def sanitize_numeric_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 # -------------------- Product properties  --------------------
 
-# MGO is the only E0 I calculated digging data through the internet. 
-#Rest of the E0 are from this excellent review article: https://pubs.acs.org/doi/full/10.1021/acs.chemrev.8b00705
+# E0 values are approximate display values from this review (except MGO,
+# whose unverified E0 has been removed): https://doi.org/10.1021/acs.chemrev.8b00705
+# Corrected heating values use NIST SRD 69 thermochemistry at 298.15 K:
+# CO: (393.51 - 110.53)/28.010 = 10.10 MJ/kg, LHV = HHV.
+# Ethylene: HHV = 1411.20/28.054 = 50.30 MJ/kg.
+# Formic-acid equivalents: HHV = 254.6/46.026 = 5.532 MJ/kg (Sinke, 1959).
+# LHV subtracts 44.004 kJ/mol combustion water (2 for C2H4, 1 for HCOOH).
+# Sources: https://webbook.nist.gov/cgi/cbook.cgi?ID=C630080&Mask=1
+# https://webbook.nist.gov/cgi/cbook.cgi?ID=C124389&Mask=1
+# https://webbook.nist.gov/cgi/cbook.cgi?ID=C74851&Mask=1
+# https://webbook.nist.gov/cgi/cbook.cgi?ID=C64186&Mask=2
+# https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Mask=3
 PRODUCTS: List[Dict] = [
     # Gases
-    {"Product": "CO",         "Phase": "gas",    "MW (g/mol)": 28.010, "nₑ⁻ to product": 2,  "co2_per_mol": 1.0, "LHV (MJ/kg)": 10.1,  "HHV (MJ/kg)": 12.6, "ρ_liq (kg/L)": np.nan, "E0 (V) [display]": 1.33},
+    {"Product": "CO",         "Phase": "gas",    "MW (g/mol)": 28.010, "nₑ⁻ to product": 2,  "co2_per_mol": 1.0, "LHV (MJ/kg)": 10.1,  "HHV (MJ/kg)": 10.1, "ρ_liq (kg/L)": np.nan, "E0 (V) [display]": 1.33},
     {"Product": "H₂",         "Phase": "gas",    "MW (g/mol)": 2.016,  "nₑ⁻ to product": 2,  "co2_per_mol": 0.0, "LHV (MJ/kg)": 120.0, "HHV (MJ/kg)": 141.9,"ρ_liq (kg/L)": np.nan, "E0 (V) [display]": 1.23},
     {"Product": "CH₄",        "Phase": "gas",    "MW (g/mol)": 16.043, "nₑ⁻ to product": 8,  "co2_per_mol": 1.0, "LHV (MJ/kg)": 50.0,  "HHV (MJ/kg)": 55.5, "ρ_liq (kg/L)": np.nan, "E0 (V) [display]": 1.06},
-    {"Product": "C₂H₄",       "Phase": "gas",    "MW (g/mol)": 28.054, "nₑ⁻ to product": 12, "co2_per_mol": 2.0, "LHV (MJ/kg)": 47.2,  "HHV (MJ/kg)": 51.9, "ρ_liq (kg/L)": np.nan, "E0 (V) [display]": 1.15},
+    {"Product": "C₂H₄",       "Phase": "gas",    "MW (g/mol)": 28.054, "nₑ⁻ to product": 12, "co2_per_mol": 2.0, "LHV (MJ/kg)": 47.2,  "HHV (MJ/kg)": 50.3, "ρ_liq (kg/L)": np.nan, "E0 (V) [display]": 1.15},
     # Liquids (at ~25 °C)
     {"Product": "Methanol",   "Phase": "liquid", "MW (g/mol)": 32.042, "nₑ⁻ to product": 6,  "co2_per_mol": 1.0, "LHV (MJ/kg)": 19.9,  "HHV (MJ/kg)": 22.7, "ρ_liq (kg/L)": 0.791, "E0 (V) [display]": 1.20},
     {"Product": "Ethanol",    "Phase": "liquid", "MW (g/mol)": 46.069, "nₑ⁻ to product": 12, "co2_per_mol": 2.0, "LHV (MJ/kg)": 26.8,  "HHV (MJ/kg)": 29.7, "ρ_liq (kg/L)": 0.789, "E0 (V) [display]": 1.14},
-    {"Product": "Formate",    "Phase": "liquid", "MW (g/mol)": 46.026, "nₑ⁻ to product": 2,  "co2_per_mol": 1.0, "LHV (MJ/kg)": 5.9,   "HHV (MJ/kg)": 6.3,  "ρ_liq (kg/L)": 1.220, "E0 (V) [display]": 1.35},
-    {"Product": "MGO",        "Phase": "liquid", "MW (g/mol)": 72.060, "nₑ⁻ to product": 12, "co2_per_mol": 3.0, "LHV (MJ/kg)": np.nan,"HHV (MJ/kg)": np.nan,"ρ_liq (kg/L)": 1.050, "E0 (V) [display]": 1.25},
+    {"Product": "Formate",    "Phase": "liquid", "MW (g/mol)": 46.026, "nₑ⁻ to product": 2,  "co2_per_mol": 1.0, "LHV (MJ/kg)": 4.58,  "HHV (MJ/kg)": 5.53, "ρ_liq (kg/L)": 1.220, "E0 (V) [display]": 1.35},
+    {"Product": "MGO",        "Phase": "liquid", "MW (g/mol)": 72.060, "nₑ⁻ to product": 12, "co2_per_mol": 3.0, "LHV (MJ/kg)": np.nan,"HHV (MJ/kg)": np.nan,"ρ_liq (kg/L)": 1.050, "E0 (V) [display]": np.nan},
 ]
 
 PRODUCT_LIST = [p["Product"] for p in PRODUCTS]
@@ -296,6 +306,32 @@ LIQUIDS = [p["Product"] for p in PRODUCTS if p["Phase"].lower() == "liquid"]
 PRODUCT_MAP = {p["Product"]: p for p in PRODUCTS}
 
 # -------------------- Utility helpers --------------------
+def product_label(product: str) -> str:
+    """Display the reporting basis while retaining stable internal product keys."""
+    if product == "Formate":
+        return "Formate (formic-acid equivalents)"
+    return "Methylglyoxal (MGO)" if product == "MGO" else product
+
+def minimum_gross_feed_slpm(product_slpm: float, carbonate_ratio: float, dissolved_fraction: float) -> float:
+    """Solve feed >= product*(1 + carbonate_ratio) + dissolved_fraction*feed."""
+    if product_slpm <= 0:
+        return 0.0
+    if dissolved_fraction >= 1.0:
+        return np.inf
+    return product_slpm * (1.0 + carbonate_ratio) / (1.0 - dissolved_fraction)
+
+def deployment_operating_hours(window_h: float, cycle_h: float, downtime_h: float) -> Tuple[float, int]:
+    """Count replacements only when a new stack operates before the horizon."""
+    if window_h <= 0.0:
+        return 0.0, 0
+    if cycle_h <= 0.0 or downtime_h < 0.0:
+        raise ValueError("Cycle life must be positive and downtime nonnegative.")
+    blocks = int(np.floor(window_h / (cycle_h + downtime_h)))
+    remainder_h = max(0.0, window_h - blocks * (cycle_h + downtime_h))
+    operating_h = blocks * cycle_h + min(cycle_h, remainder_h)
+    replacements = max(0, int(np.ceil(operating_h / cycle_h - 1e-12)) - 1)
+    return operating_h, replacements
+
 def to_m2(area_value: float, area_unit: str) -> float:
     return area_value * 1e-4 if area_unit == "cm²" else area_value
 
@@ -501,11 +537,11 @@ def product_specific_energy_rows(
 
         sec_kWh_kg = (
             n_e * F * V_cell / (fe_frac * MW_kg_mol * 3.6e6)
-            if MW_kg_mol > EPS else np.nan
+            if MW_kg_mol > EPS and mass_kg_h > EPS and V_cell > EPS else np.nan
         )
         thermo_eff_pct = (
             100.0 * fe_frac * props["E0 (V) [display]"] / V_cell
-            if V_cell > EPS and pd.notna(props["E0 (V) [display]"]) else np.nan
+            if power_W > EPS and pd.notna(props["E0 (V) [display]"]) else np.nan
         )
 
         lhv = props["LHV (MJ/kg)"]
@@ -522,7 +558,7 @@ def product_specific_energy_rows(
             display_rate = f"{format_liquid_rate(mass_kg_h, liquid_L_h)} {LIQUID_FLOW_UNIT}"
 
         rows.append({
-            "Product": p,
+            "Product": product_label(p),
             "FE (%)": 100.0 * fe_frac,
             "Displayed production rate": display_rate,
             "Production (kg/h)": mass_kg_h,
@@ -556,6 +592,92 @@ def mflow_to_mass_and_vol(n_mol_s: float, MW_g_mol: float, rho_liq_kg_L: Optiona
 
 def total_power_watts(I: float, V: float, n_units: int) -> float:
     return I * V * max(1, n_units)
+
+
+def validate_fe_distribution(fe_map_pct: Dict[str, float]) -> None:
+    """Reject invalid charge allocations instead of silently normalizing them."""
+    unknown = set(fe_map_pct) - set(PRODUCT_LIST)
+    if unknown:
+        raise ValueError("Unknown product(s): " + ", ".join(sorted(unknown)))
+    values = [float(value) for value in fe_map_pct.values()]
+    if any(not np.isfinite(value) or value < 0.0 or value > 100.0 for value in values):
+        raise ValueError("Every Faradaic efficiency must be finite and between 0 and 100%.")
+    if sum(values) > 100.0 + 1e-9:
+        raise ValueError(f"Faradaic efficiencies sum to {sum(values):.2f}%. Reduce the total to 100% or less.")
+
+
+def product_rate_to_mol_s(product: str, rate: float, unit: str, molar_vol_L: float) -> float:
+    """Convert a target product rate; liquid volumes are pure-product equivalents."""
+    if product not in PRODUCT_MAP or not np.isfinite(rate) or rate < 0:
+        raise ValueError("Choose a known product and a finite, nonnegative production rate.")
+    props = PRODUCT_MAP[product]
+    if unit == "mol/h":
+        return rate / 3600.0
+    if unit == "mmol/h":
+        return rate / 3.6e6
+    if unit in {"mg/h", "g/h", "kg/h"}:
+        grams_per_hour = rate * {"mg/h": 1e-3, "g/h": 1.0, "kg/h": 1e3}[unit]
+        return grams_per_hour / props["MW (g/mol)"] / 3600.0
+    if unit in {"SCCM", "SLPM"} and props["Phase"] == "gas":
+        if not np.isfinite(molar_vol_L) or molar_vol_L <= 0:
+            raise ValueError("Gas molar volume must be positive.")
+        return slpm_to_mol_s(rate / 1000.0 if unit == "SCCM" else rate, molar_vol_L)
+    if unit in {"µL/min", "mL/h", "L/h"} and props["Phase"] == "liquid":
+        liters_per_hour = rate * {"µL/min": 60e-6, "mL/h": 1e-3, "L/h": 1.0}[unit]
+        density = props["ρ_liq (kg/L)"]
+        if not np.isfinite(density) or density <= 0:
+            raise ValueError("A positive pure-product density is required for volume-based sizing.")
+        return liters_per_hour * density * 1000.0 / props["MW (g/mol)"] / 3600.0
+    raise ValueError(f"Unsupported production-rate unit {unit!r} for {product}.")
+
+
+def size_from_product_rate(product: str, target_mol_s: float, j_A_m2: float,
+                           fe_map_pct: Dict[str, float], n_units: int) -> Dict[str, float]:
+    """Invert Faraday's law for a target product rate at a prescribed FE and j."""
+    validate_fe_distribution(fe_map_pct)
+    if product not in PRODUCT_MAP:
+        raise ValueError("Choose a known product.")
+    if not np.isfinite(target_mol_s) or target_mol_s <= 0:
+        raise ValueError("Target production must be positive.")
+    if not np.isfinite(j_A_m2) or j_A_m2 <= 0:
+        raise ValueError("Current density must be positive for electrode sizing.")
+    if not np.isfinite(n_units) or n_units < 1 or int(n_units) != n_units:
+        raise ValueError("The number of cells must be a positive integer.")
+    fe = float(fe_map_pct.get(product, 0.0)) / 100.0
+    if fe <= 0:
+        raise ValueError("The selected product must have a positive Faradaic efficiency.")
+    summed_current = target_mol_s * PRODUCT_MAP[product]["nₑ⁻ to product"] * F / fe
+    area_total_m2 = summed_current / j_A_m2
+    return {"I_total_A": summed_current, "I_unit_A": summed_current / n_units,
+            "area_total_m2": area_total_m2, "area_per_cell_cm2": area_total_m2 * 1e4 / n_units}
+
+
+def apply_co2_supply_cap(grid: pd.DataFrame, cap: float, co2_min_column: str,
+                         selected_stoich: float) -> pd.DataFrame:
+    """Screen every grid row against an upper gross-feed cap in matching flow units.
+
+    For positive product carbon C, feed=C/U=C*S. Thus U>=C/cap and S<=cap/C.
+    The calculation uses the ideal product-forming balance; carbon losses can
+    increase feed demand and are handled separately in Carbon & Energy.
+    """
+    if not np.isfinite(cap) or cap < 0 or not np.isfinite(selected_stoich) or selected_stoich < 1:
+        raise ValueError("Supply cap must be nonnegative and feed stoichiometry must be at least one.")
+    out = grid.copy()
+    demand = pd.to_numeric(out[co2_min_column], errors="raise").astype(float)
+    if (demand < 0).any() or not np.isfinite(demand).all():
+        raise ValueError("Product-forming CO₂ requirements must be finite and nonnegative.")
+    positive = demand > EPS
+    out["Required CO₂ inlet at selected S"] = demand * selected_stoich
+    out["Feasible at selected S"] = out["Required CO₂ inlet at selected S"] <= cap + EPS
+    out["Feasible at some utilization"] = demand <= cap + EPS
+    out["Minimum required utilization (%)"] = np.nan
+    out["Maximum allowed S"] = np.inf
+    if cap > 0:
+        out.loc[positive, "Minimum required utilization (%)"] = 100.0 * demand[positive] / cap
+    else:
+        out.loc[positive, "Minimum required utilization (%)"] = np.inf
+    out.loc[positive, "Maximum allowed S"] = cap / demand[positive]
+    return out
 
 # ---------- UI helpers for synchronized FE inputs ----------
 FE_SYNC_SECTIONS = ["calc", "cb", "sz", "u", "axs"]
@@ -606,6 +728,155 @@ def load_durability_fe_for_product() -> None:
 
 initialize_shared_fe_state()
 
+# ---------- Shared Advanced-mode operating point ----------
+# Canonical values are independent of widget keys, which Streamlit may remove
+# when a mode or conditional widget is hidden. All mutation runs before widgets
+# are created: in initialization or in an on_change / on_click callback.
+OPERATING_WIDGETS = {
+    "area_m2": {
+        "calc": ("calc_area", "calc_area_unit", "cm²"),
+        "cb": ("cb_area", "cb_area_unit", "cm²"),
+        "u": ("u_area", None, "cm²"),
+        "dur": ("dur_area", None, "cm²"),
+    },
+    "j_A_m2": {
+        "calc": ("calc_j", "calc_j_unit", "mA/cm²"),
+        "cb": ("cb_j", "cb_j_unit", "mA/cm²"),
+        "sz": ("sz_j", "sz_j_unit", "mA/cm²"),
+        "u": ("u_j", None, "mA/cm²"),
+        "axs": ("axs_j", "axs_j_unit", "mA/cm²"),
+        "dur": ("dur_j", None, "mA/cm²"),
+    },
+    "V": {section: (f"{section}_V", None, "V")
+          for section in ("calc", "cb", "sz", "u", "axs")},
+    "S": {section: (f"{section}_S", None, "S")
+          for section in ("calc", "cb", "sz", "axs")},
+}
+OPERATING_WIDGETS["V"]["dur"] = ("dur_V0", None, "V")
+OPERATING_DEFAULTS = {"area_m2": 0.01, "j_A_m2": 2000.0, "V": 3.2, "S": 2.0}
+
+
+def _operating_scale(quantity: str, unit: str) -> float:
+    """Multiply a display value by this factor to obtain the canonical value."""
+    if quantity == "area_m2":
+        return {"cm²": 1e-4, "m²": 1.0}[unit]
+    if quantity == "j_A_m2":
+        return {"mA/cm²": 10.0, "A/cm²": 1e4, "A/m²": 1.0}[unit]
+    return 1.0
+
+
+def _mirror_operating_quantity(quantity: str) -> None:
+    value = float(st.session_state[f"shared_op_{quantity}"])
+    for section, (widget_key, unit_key, default_unit) in OPERATING_WIDGETS[quantity].items():
+        unit = st.session_state.get(unit_key, default_unit) if unit_key else default_unit
+        st.session_state[widget_key] = value / _operating_scale(quantity, unit)
+
+
+def initialize_shared_operating_state() -> None:
+    """Recover an existing Calculator setting first, then establish one baseline."""
+    for quantity, sections in OPERATING_WIDGETS.items():
+        for section, (_, unit_key, default_unit) in sections.items():
+            if unit_key:
+                saved_unit_key = f"shared_op_unit_{section}_{quantity}"
+                if unit_key not in st.session_state:
+                    st.session_state[unit_key] = st.session_state.get(saved_unit_key, default_unit)
+                st.session_state[saved_unit_key] = st.session_state[unit_key]
+        shared_key = f"shared_op_{quantity}"
+        if shared_key not in st.session_state:
+            value = OPERATING_DEFAULTS[quantity]
+            for widget_key, unit_key, default_unit in sections.values():
+                if widget_key in st.session_state:
+                    unit = st.session_state.get(unit_key, default_unit) if unit_key else default_unit
+                    value = float(st.session_state[widget_key]) * _operating_scale(quantity, unit)
+                    break
+            st.session_state[shared_key] = value
+        _mirror_operating_quantity(quantity)
+
+
+def sync_operating_from_tab(section: str, quantity: str) -> None:
+    """A numerical edit changes the physical operating point in every linked tab."""
+    widget_key, unit_key, default_unit = OPERATING_WIDGETS[quantity][section]
+    unit = st.session_state.get(unit_key, default_unit) if unit_key else default_unit
+    st.session_state[f"shared_op_{quantity}"] = (
+        float(st.session_state[widget_key]) * _operating_scale(quantity, unit)
+    )
+    _mirror_operating_quantity(quantity)
+
+
+def change_operating_unit(section: str, quantity: str) -> None:
+    """A unit edit changes display values while preserving the physical point."""
+    _, unit_key, _ = OPERATING_WIDGETS[quantity][section]
+    st.session_state[f"shared_op_unit_{section}_{quantity}"] = st.session_state[unit_key]
+    _mirror_operating_quantity(quantity)
+
+
+def operating_input_step(section: str, quantity: str, default_step: float) -> float:
+    _, unit_key, default_unit = OPERATING_WIDGETS[quantity][section]
+    unit = st.session_state.get(unit_key, default_unit) if unit_key else default_unit
+    return default_step * _operating_scale(quantity, default_unit) / _operating_scale(quantity, unit)
+
+
+def copy_simple_to_advanced(molar_volume_L: float, n_cells: int) -> None:
+    """Explicitly replace the Advanced baseline with the current Simple scenario.
+
+    Switching modes alone never replaces a multi-product FE distribution.
+    This is a button callback; do not call it after rendering Advanced widgets.
+    """
+    product = st.session_state.get("Simple_product", "CO")
+    product_fe = float(st.session_state.get("Simple_product_fe", 90.0))
+    h2_fe = float(st.session_state.get("Simple_h2_fe", 5.0))
+    utilization = float(st.session_state.get("Simple_utilization", 50.0)) / 100.0
+    j_A_m2 = float(st.session_state.get("Simple_j", 200.0)) * 10.0
+    voltage = float(st.session_state.get("Simple_voltage", 3.2))
+    if (product_fe + h2_fe > 100.0 + 1e-9 or product_fe <= 0.0
+            or not 0.0 < utilization <= 1.0 or j_A_m2 <= 0.0):
+        st.session_state["simple_copy_status"] = "Enter a valid FE split, positive current density, and utilization before copying."
+        return
+    if st.session_state.get("Simple_task", "production") == "sizing":
+        inlet_slpm = display_to_slpm(float(st.session_state.get("Simple_co2_inlet", slpm_to_display(0.1))))
+        prop = PRODUCT_MAP[product]
+        carbon_per_electron = (product_fe / 100.0) * prop["co2_per_mol"] / prop["nₑ⁻ to product"]
+        if inlet_slpm <= 0.0 or carbon_per_electron <= 0.0:
+            st.session_state["simple_copy_status"] = "Enter a positive CO₂ inlet and carbon-product FE before copying."
+            return
+        total_current_A = slpm_to_mol_s(inlet_slpm * utilization, molar_volume_L) * F / carbon_per_electron
+        area_m2 = total_current_A / j_A_m2 / max(int(n_cells), 1)
+        st.session_state["sz_inlet"] = slpm_to_display(inlet_slpm)
+    elif st.session_state.get("Simple_task") == "target":
+        fe_map = {p: (product_fe if p == product else h2_fe if p == "H₂" else 0.0) for p in PRODUCT_LIST}
+        try:
+            mol_s = product_rate_to_mol_s(product, float(st.session_state.get("Simple_target_rate", 1.0)),
+                                        st.session_state.get("Simple_target_unit", "kg/h"), molar_volume_L)
+            sizing = size_from_product_rate(product, mol_s, j_A_m2, fe_map, int(n_cells))
+        except ValueError as exc:
+            st.session_state["simple_copy_status"] = str(exc)
+            return
+        area_m2 = sizing["area_per_cell_cm2"] * 1e-4
+    else:
+        area_m2 = float(st.session_state.get("Simple_area", 100.0)) * 1e-4
+        if area_m2 <= 0.0:
+            st.session_state["simple_copy_status"] = "Enter a positive electrode area before copying."
+            return
+    for quantity, value in {"area_m2": area_m2, "j_A_m2": j_A_m2,
+                            "V": voltage, "S": 1.0 / utilization}.items():
+        st.session_state[f"shared_op_{quantity}"] = value
+        _mirror_operating_quantity(quantity)
+    for p in PRODUCT_LIST:
+        value = product_fe if p == product else h2_fe if p == "H₂" else 0.0
+        st.session_state[_global_fe_key(p)] = value
+        for section in FE_SYNC_SECTIONS:
+            st.session_state[_section_fe_key(section, p)] = value
+    if "dur_product" in st.session_state:
+        st.session_state["dur_FE0"] = float(st.session_state[_global_fe_key(st.session_state["dur_product"])])
+    st.session_state["gs_units"] = int(n_cells)
+    st.session_state["gs_stack"] = int(n_cells) > 1
+    st.session_state["calc_mode"] = "stoich"
+    st.session_state["cb_feed_mode"] = "stoich"
+    st.session_state["simple_copy_status"] = "Simple inputs copied to Advanced, including the selected carbon product and H₂ FE split."
+
+
+initialize_shared_operating_state()
+
 def fe_grid_inputs(
     section_key: str,
     products: List[str],
@@ -624,7 +895,7 @@ def fe_grid_inputs(
             with cols[c]:
                 widget_key = _section_fe_key(section_key, product)
                 fe_map[product] = st.number_input(
-                    f"{product} FE (%)",
+                    f"{product_label(product)} FE (%)",
                     min_value=0.0, max_value=100.0,
                     step=1.0,
                     key=widget_key,
@@ -632,6 +903,11 @@ def fe_grid_inputs(
                     args=(section_key, product),
                 )
         st.markdown("</div>", unsafe_allow_html=True)
+    try:
+        validate_fe_distribution(fe_map)
+    except ValueError as exc:
+        st.error(str(exc))
+        st.stop()
     return fe_map
 
 # -------------------- Core calculators (multi-product, gas vs liquid) --------------------
@@ -647,6 +923,13 @@ class ElectrolyzerInputs:
     molar_vol_L: float
 
 def compute_core_products(inp: ElectrolyzerInputs) -> Dict[str, float]:
+    validate_fe_distribution(inp.fe_map_pct)
+    if any(not np.isfinite(value) or value < 0 for value in (inp.area_value, inp.j_value, inp.V_cell)):
+        raise ValueError("Area, current density, and voltage must be finite and nonnegative.")
+    if not np.isfinite(inp.n_units) or inp.n_units < 1 or int(inp.n_units) != inp.n_units:
+        raise ValueError("The number of cells must be a positive integer.")
+    if not np.isfinite(inp.molar_vol_L) or inp.molar_vol_L <= 0:
+        raise ValueError("Gas molar volume must be positive.")
     A_m2 = to_m2(inp.area_value, inp.area_unit)
     j_A_m2 = to_A_per_m2(inp.j_value, inp.j_unit)
     I_unit = amps(A_m2, j_A_m2)
@@ -1151,7 +1434,7 @@ def render_cost_per_test() -> None:
 
 # -------------------- Simple-mode helpers and interface --------------------
 def friendly_product_name(product: str) -> str:
-    return "Methylglyoxal (MGO)" if product == "MGO" else product
+    return product_label(product)
 
 
 def build_Simple_fe_map(
@@ -1248,14 +1531,14 @@ def render_Simple_mode() -> None:
     st.markdown("### Step 1 — Choose your calculation")
     Simple_task = st.radio(
         "What do you want to calculate?",
-        options=["production", "sizing"],
+        options=["production", "sizing", "target"],
         horizontal=True,
         key="Simple_task",
-        format_func=lambda choice: (
-            "Predict production from electrode area"
-            if choice == "production"
-            else "Size an electrode from available CO₂ flow"
-        ),
+        format_func=lambda choice: {
+            "production": "Predict production from electrode area",
+            "sizing": "Size an electrode from available CO₂ flow",
+            "target": "Size an electrode for a production target",
+        }[choice],
     )
 
     st.markdown("### Step 2 — Define the product and operating point")
@@ -1381,7 +1664,7 @@ def render_Simple_mode() -> None:
 
         r4, r5, r6 = st.columns(3)
         with r4:
-            st.metric("Total current", f"{Simple_core['I_total_A']:,.2f} A")
+            st.metric("Summed cell current", f"{Simple_core['I_total_A']:,.2f} A")
         with r5:
             st.metric("Electrical power", f"{power_kW:,.3f} kW")
         with r6:
@@ -1403,7 +1686,7 @@ def render_Simple_mode() -> None:
             f"{basis_label.split('—')[0].strip()} dry gas"
         )
 
-    else:
+    elif Simple_task == "sizing":
         st.markdown("### Step 3 — Enter the available CO₂ flow")
         sizing1, sizing2 = st.columns([1, 2])
         with sizing1:
@@ -1477,7 +1760,7 @@ def render_Simple_mode() -> None:
 
         r4, r5, r6 = st.columns(3)
         with r4:
-            st.metric("Total current", f"{total_current_A:,.2f} A")
+            st.metric("Summed cell current", f"{total_current_A:,.2f} A")
         with r5:
             st.metric("Electrical power", f"{power_kW:,.3f} kW")
         with r6:
@@ -1497,6 +1780,60 @@ def render_Simple_mode() -> None:
             f"{Simple_product_fe:.1f}% {friendly_product_name(Simple_product)} FE · "
             f"{Simple_h2_fe:.1f}% H₂ FE · {basis_label.split('—')[0].strip()} dry gas"
         )
+
+    else:
+        st.markdown("### Step 3 — Enter the desired product rate")
+        target_units = ["mg/h", "g/h", "kg/h", "mmol/h", "mol/h"]
+        if PRODUCT_MAP[Simple_product]["Phase"] == "gas":
+            target_units += ["SCCM", "SLPM"]
+        else:
+            target_units += ["µL/min", "mL/h", "L/h"]
+        target_rate_col, target_unit_col = st.columns(2)
+        with target_rate_col:
+            target_rate = st.number_input("Target production rate", min_value=0.0, value=1.0,
+                                          step=0.1, key="Simple_target_rate")
+        with target_unit_col:
+            if st.session_state.get("Simple_target_unit") not in target_units:
+                st.session_state["Simple_target_unit"] = "kg/h"
+            target_unit = st.selectbox("Target production unit", target_units, key="Simple_target_unit")
+        st.caption("Target is the amount formed electrochemically before recovery or separation losses. "
+                   "Liquid volume targets are pure-product equivalents; formate uses a formic-acid equivalent.")
+        if not fe_valid:
+            return
+        try:
+            target_mol_s = product_rate_to_mol_s(Simple_product, target_rate, target_unit, mv_L_per_mol)
+            target_size = size_from_product_rate(Simple_product, target_mol_s,
+                                                to_A_per_m2(Simple_j, "mA/cm²"), fe_map, int(n_units_global))
+        except ValueError as exc:
+            st.warning(str(exc))
+            return
+        Simple_inputs = ElectrolyzerInputs(
+            target_size["area_per_cell_cm2"], "cm²", Simple_j, "mA/cm²",
+            Simple_voltage, fe_map, int(n_units_global), mv_L_per_mol,
+        )
+        Simple_core = compute_core_products(Simple_inputs)
+        product_value, product_unit = Simple_product_rate(Simple_core, Simple_product)
+        co2_in_slpm = Simple_core["CO2_min_slpm"] / utilization_fraction
+        outlet_slpm = co2_in_slpm - Simple_core["CO2_min_slpm"] + Simple_core["Gas_products_total_SLPM"]
+        st.markdown("### Step 4 — Read the result")
+        r1, r2, r3 = st.columns(3)
+        with r1: st.metric("Required area per cell", f"{target_size['area_per_cell_cm2']:,.2f} cm²")
+        with r2: st.metric("Total active area", f"{target_size['area_total_m2']*1e4:,.2f} cm²")
+        with r3: st.metric(f"{friendly_product_name(Simple_product)} production", f"{product_value} {product_unit}")
+        r4, r5, r6 = st.columns(3)
+        with r4: st.metric(f"Required CO₂ inlet ({GAS_FLOW_UNIT})", format_gas_flow(co2_in_slpm))
+        with r5: st.metric("Electrical power", f"{Simple_core['I_total_A']*Simple_voltage/1000:,.3f} kW")
+        with r6: st.metric(f"Estimated gas outlet ({GAS_FLOW_UNIT})", format_gas_flow(outlet_slpm))
+        st.caption(f"{int(n_units_global)} cells · {Simple_j:g} mA/cm² · {Simple_voltage:g} V/cell · "
+                   f"{Simple_product_fe:g}% product FE · {Simple_utilization_pct:g}% utilization · "
+                   f"{basis_label.split('—')[0].strip()} dry gas")
+
+    st.caption(
+        "Summed cell current is the sum across all cells. For a series-connected stack, "
+        f"the terminal current is {Simple_core['I_unit_A']:,.3f} A and the stack voltage is "
+        f"{int(n_units_global)*Simple_voltage:,.3f} V; the total power is unchanged. "
+        "Total active electrode area does not include frames, manifolds, or balance-of-plant footprint."
+    )
 
     with st.expander("How was this calculated?", expanded=False):
         st.markdown(
@@ -1521,7 +1858,7 @@ def render_Simple_mode() -> None:
         )
 
     st.caption(
-        "Need multi-product FE inputs, experimental crossover decoding, real-gas corrections, "
+        "Need multi-product FE inputs, experimental crossover decoding, gas-condition conversions, "
         "energy sensitivity, stack heatmaps, or durability modeling? Select Advanced in the sidebar."
     )
 
@@ -1533,9 +1870,20 @@ if IS_Simple:
     ])
     with tab_simple_calc:
         render_Simple_mode()
+        st.caption("Copying replaces the Advanced operating point and FE distribution with "
+                   "the selected carbon product plus H₂. Switching modes alone preserves Advanced inputs.")
+        st.button("Copy Simple inputs to Advanced", key="simple_copy_advanced",
+                  on_click=copy_simple_to_advanced, args=(mv_L_per_mol, int(n_units_global)))
+        if st.session_state.get("simple_copy_status"):
+            st.caption(st.session_state["simple_copy_status"])
     with tab_simple_cost:
         render_cost_per_test()
 else:
+    st.caption(
+        "Advanced tabs share electrode area, current density, cell voltage, FE, and stoichiometric feed ratio S where applicable. "
+        "Area sizing calculates its own area; sweep ranges, measured feeds, and degradation assumptions are independent. "
+        "Simple scenarios can be copied explicitly into this shared operating point."
+    )
     # -------------------- Tabs --------------------
     tab_instructions, tab_calc, tab_cost, tab_carbon, tab_size, tab_s2, tab_s3, tab_durability = st.tabs([
         "Instructions",
@@ -1565,7 +1913,7 @@ else:
               Choose between `Stoich (S)` or `Inlet Flow` modes to compute:
                 - Gas and liquid product rates  
                 - CO₂ utilization (%)  
-                - Power and total current
+                - Power and summed cell current
             
             Stoich is the "Stoichiometry". It is the ratio of actual CO₂ fed to the theoretical minimum CO₂ required to produce the observed products.
                
@@ -1581,7 +1929,7 @@ else:
               Choose **Plan from performance assumptions** for deployment scenarios or **Decode an experiment** to infer CO₂ loss/crossover from measured inlet flow, outlet flow, and GC composition. Both workflows provide carbon metrics and improved Sankey diagrams. The same tab reports product-specific energy efficiency and specific electricity consumption.
 
             - **Area Sizing:**  
-              Provides the **required electrode area** per unit and total area for a given CO₂ inlet and stoichiometric ratio (S).  
+              Provides the **required electrode area** per unit and total area from available CO₂ feed or a target product rate.  
               Includes per-product outputs in the selected gas and liquid display units.
     
             - **Sensitivity: CO₂ Utilization:**  
@@ -1591,7 +1939,7 @@ else:
               Visualizes scaling trade-offs between cell area and number of units in the stack using a heatmap.
     
             - **Sensitivity: CO₂ Supply Cap:**  
-              Determines the maximum achievable utilization given a CO₂ feed limitation.
+              Screens every area–cell-count combination at the selected S and reports the minimum utilization needed to stay within the feed cap.
 
             - **Durability:**  
               Converts voltage rise, FE loss, and carbon-efficiency loss into stack life, replacement frequency, lifetime production, and lifetime-average energy demand.
@@ -1604,7 +1952,7 @@ else:
             - Hover over plots for tooltips showing precise data points.  
             - Use the sidebar dropdowns to choose gas-flow and liquid-product display units.
             - Adjust **molar volume basis (STP/SATP)** in the sidebar to update standard gas volumetric conversions.
-            - Open **Real gas conditions** only when you want to translate standard dry flow into actual wet flow at your measured temperature, humidity, outlet pressure, and gas ΔP.
+            - Open **Gas temperature, pressure, and humidity** to translate standard dry flow into actual wet flow using an ideal-gas approximation at your measured conditions.
             - If you find any mistakes please feel free to [reach out](https://people.llnl.gov/prajapati3)!
     
             ---
@@ -1620,7 +1968,7 @@ else:
     - **Gas flow display unit:** `{GAS_FLOW_UNIT}`  
     - **Liquid-product display unit:** `{LIQUID_FLOW_UNIT}`  
     - **Stacking:** `{'ON' if use_stack_global else 'OFF'}` — Units: `{n_units_global}`  
-    - **Real gas interpretation:** `{gas_temperature_C:.1f} °C`, `{gas_relative_humidity_pct:.1f}% RH`, outlet `{gas_outlet_pressure_bar_abs:.4f} bar(a)`, gas ΔP `{gas_pressure_drop_bar:.4f} bar`  
+    - **Actual gas conditions (ideal-gas approximation):** `{gas_temperature_C:.1f} °C`, `{gas_relative_humidity_pct:.1f}% RH`, outlet `{gas_outlet_pressure_bar_abs:.4f} bar(a)`, gas ΔP `{gas_pressure_drop_bar:.4f} bar`  
     - **Liquid-side ΔP reference:** `{liquid_pressure_drop_bar:.4f} bar`  
     - **Gas products:** {", ".join(GASES) if GASES else "None"}  
     - **Liquid products (treated as condensed):** {", ".join(LIQUIDS) if LIQUIDS else "None"}  
@@ -1628,9 +1976,7 @@ else:
 
         # Display name overrides for constants view
         def display_name(prod_key: str) -> str:
-            if prod_key == "MGO":
-                return "Methylglyoxal (MGO)"
-            return prod_key
+            return product_label(prod_key)
 
         c1, c2 = st.columns(2)
         with c1:
@@ -1677,6 +2023,25 @@ else:
                 "E0 (V) [display]": st.column_config.NumberColumn("E⁰ (V) [display only]", format="%.2f"),
             },
         )
+        st.caption(
+            "Liquid volumes are neat-product equivalents calculated from mass and density; "
+            "they exclude electrolyte and solvent. Formate mass, volume, and heating values "
+            "are reported as formic-acid equivalents. MGO density is an approximate "
+            "screening input; its heating values and equilibrium potential are unavailable."
+        )
+        with st.expander("Heating-value sources and definitions", expanded=False):
+            st.markdown(
+                "HHV uses liquid water as a combustion product; LHV uses water vapor. "
+                "Both are referenced to approximately 25 °C. Corrected values use "
+                "[NIST CO](https://webbook.nist.gov/cgi/cbook.cgi?ID=C630080&Mask=1), "
+                "[CO₂](https://webbook.nist.gov/cgi/cbook.cgi?ID=C124389&Mask=1), "
+                "[ethylene](https://webbook.nist.gov/cgi/cbook.cgi?ID=C74851&Mask=1), "
+                "[formic acid](https://webbook.nist.gov/cgi/cbook.cgi?ID=C64186&Mask=2), "
+                "and [water](https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Mask=3). "
+                "CO has equal LHV and HHV because its combustion forms no water. "
+                "Formic-acid values use Sinke (1959), as compiled by NIST. "
+                "Other heating values are retained as rounded screening constants."
+            )
 
         csv = display_df.to_csv(index=False).encode("utf-8")
         st.download_button(
@@ -1707,13 +2072,13 @@ else:
 
         colA, colB, colC = st.columns(3)
         with colA:
-            area_value = st.number_input("Active area per unit", min_value=0.0, value=100.0, step=1.0, key="calc_area")
-            area_unit  = st.selectbox("Area unit", ["cm²", "m²"], index=0, key="calc_area_unit")
+            area_value = st.number_input("Active area per unit", min_value=0.0, step=operating_input_step("calc", "area_m2", 1.0), key="calc_area", format="%.6g", on_change=sync_operating_from_tab, args=("calc", "area_m2"))
+            area_unit  = st.selectbox("Area unit", ["cm²", "m²"], index=0, key="calc_area_unit", on_change=change_operating_unit, args=("calc", "area_m2"))
         with colB:
-            j_value = st.number_input("Current density", min_value=0.0, value=200.0, step=10.0, key="calc_j")
-            j_unit  = st.selectbox("j units", ["mA/cm²", "A/cm²", "A/m²"], index=0, key="calc_j_unit")
+            j_value = st.number_input("Current density", min_value=0.0, step=operating_input_step("calc", "j_A_m2", 10.0), key="calc_j", format="%.6g", on_change=sync_operating_from_tab, args=("calc", "j_A_m2"))
+            j_unit  = st.selectbox("j units", ["mA/cm²", "A/cm²", "A/m²"], index=0, key="calc_j_unit", on_change=change_operating_unit, args=("calc", "j_A_m2"))
         with colC:
-            V_cell  = st.number_input("Cell voltage (V)", min_value=0.0, value=3.2, step=0.1, key="calc_V")
+            V_cell  = st.number_input("Cell voltage (V)", min_value=0.0, step=0.1, key="calc_V", on_change=sync_operating_from_tab, args=("calc", "V"))
 
         fe_map_pct: Dict[str, float] = fe_grid_inputs("calc", PRODUCT_LIST, title="FE split (%)")
 
@@ -1734,7 +2099,7 @@ else:
             format_func=lambda choice: "Stoich (S)" if choice == "stoich" else f"Inlet flow ({GAS_FLOW_UNIT})",
         )
         if mode == "stoich":
-            S = st.number_input("CO₂ Stoich S (inlet/min)", min_value=1.0, value=2.0, step=0.1, key="calc_S")
+            S = st.number_input("CO₂ Stoich S (inlet/min)", min_value=1.0, step=0.1, key="calc_S", on_change=sync_operating_from_tab, args=("calc", "S"))
             co2_in_slpm_input = None
         else:
             co2_in_display_input = gas_flow_number_input(
@@ -1759,7 +2124,7 @@ else:
         if core["CO2_min_slpm"] <= EPS:
             co2_in_slpm = 0.0 if (mode == "stoich") else float(co2_in_slpm_input or 0.0)
             Stoich_S = (np.inf if co2_in_slpm > 0 else 1.0) if mode != "stoich" else float(S or 1.0)
-            util = 0.0 if co2_in_slpm > 0 else 1.0
+            util = 0.0 if co2_in_slpm > 0 else np.nan
             warn = "Total FE to carbon products is zero; CO₂ minimum is 0."
         else:
             if mode == "stoich":
@@ -1776,18 +2141,29 @@ else:
                     f"minimum ({format_gas_flow(core['CO2_min_slpm'])} {GAS_FLOW_UNIT})."
                 )
 
+        if core["CO2_min_slpm"] > co2_in_slpm + EPS:
+            st.error(f"The specified feed cannot support the requested product formation. {warn} "
+                     "Increase CO₂ feed or reduce current, area, cell count, or carbon-product FE.")
+            st.stop()
+
         # GAS metrics
-        st.subheader("Gas-side Results (true outlet)")
+        st.subheader("Gas-side Results (product-forming balance)")
         g1, g2, g3, g4 = st.columns(4)
         with g1: st.metric(f"CO₂ Minimum ({GAS_FLOW_UNIT})", format_gas_flow(core["CO2_min_slpm"]))
         with g2: st.metric(f"CO₂ Inlet ({GAS_FLOW_UNIT})", format_gas_flow(co2_in_slpm))
         with g3: st.metric("Stoich S (inlet/min)", "∞" if not np.isfinite(Stoich_S) else f"{Stoich_S:.3f}")
-        with g4: st.metric("Utilization (%)", f"{util*100:.1f}")
+        with g4: st.metric("Utilization (%)", f"{util*100:.1f}" if np.isfinite(util) else "Not defined")
 
         g5, g6, g7 = st.columns(3)
         with g5: st.metric("Per-Unit Current (A)", f"{core['I_unit_A']:.2f}")
-        with g6: st.metric("Total Current (A)", f"{core['I_total_A']:.2f}")
+        with g6: st.metric("Summed cell current (A)", f"{core['I_total_A']:.2f}")
         with g7: st.metric("Power (kW)", f"{(core['I_total_A']*V_cell)/1000.0:.2f}")
+        st.caption(
+            f"For series-connected cells: terminal current = {core['I_unit_A']:,.3f} A; "
+            f"stack voltage = {n_units_effective*V_cell:,.3f} V. Summed cell current is an accounting quantity. "
+            "Utilization here is inlet CO₂ incorporated into the specified products; carbonate and other carbon losses "
+            "are included separately in Carbon & Energy."
+        )
 
         st.markdown(f"#### Gas product flowrates ({GAS_FLOW_UNIT})")
         gas_cols = st.columns(max(1, len(GASES)))
@@ -1831,7 +2207,7 @@ else:
             kg_h, L_h = mflow_to_mass_and_vol(n_p, MW, rho)
             L_h_value = L_h if L_h is not None else 0.0
             liq_rows.append({
-                "Product": p,
+                "Product": product_label(p),
                 f"Production rate ({LIQUID_FLOW_UNIT})": liquid_rate_to_display(kg_h, L_h_value),
                 "mol/s": n_p,
                 "ρ (kg/L)": (rho if rho else 0.0),
@@ -1901,7 +2277,7 @@ else:
                 r"""
     where:
 
-    - \(I\) is the total current.
+    - \(I\) is the sum of currents across all cells.
     - \(FE_i\) is the Faradaic efficiency of product \(i\), expressed as a fraction.
     - \(n_{e,i}\) is the number of electrons required per mole of product \(i\).
     - \(F\) is Faraday's constant.
@@ -1996,13 +2372,13 @@ else:
         st.markdown("### 1. Electrochemical operating point")
         c1, c2, c3, c4 = st.columns(4)
         with c1:
-            cb_area = st.number_input("Active area per unit", min_value=0.0, value=100.0, step=5.0, key="cb_area")
-            cb_area_unit = st.selectbox("Area unit", ["cm²", "m²"], index=0, key="cb_area_unit")
+            cb_area = st.number_input("Active area per unit", min_value=0.0, step=operating_input_step("cb", "area_m2", 5.0), key="cb_area", format="%.6g", on_change=sync_operating_from_tab, args=("cb", "area_m2"))
+            cb_area_unit = st.selectbox("Area unit", ["cm²", "m²"], index=0, key="cb_area_unit", on_change=change_operating_unit, args=("cb", "area_m2"))
         with c2:
-            cb_j = st.number_input("Current density", min_value=0.0, value=200.0, step=10.0, key="cb_j")
-            cb_j_unit = st.selectbox("j units", ["mA/cm²", "A/cm²", "A/m²"], index=0, key="cb_j_unit")
+            cb_j = st.number_input("Current density", min_value=0.0, step=operating_input_step("cb", "j_A_m2", 10.0), key="cb_j", format="%.6g", on_change=sync_operating_from_tab, args=("cb", "j_A_m2"))
+            cb_j_unit = st.selectbox("j units", ["mA/cm²", "A/cm²", "A/m²"], index=0, key="cb_j_unit", on_change=change_operating_unit, args=("cb", "j_A_m2"))
         with c3:
-            cb_V = st.number_input("Cell voltage (V)", min_value=0.0, value=3.2, step=0.1, key="cb_V")
+            cb_V = st.number_input("Cell voltage (V)", min_value=0.0, step=0.1, key="cb_V", on_change=sync_operating_from_tab, args=("cb", "V"))
         with c4:
             cb_units = n_units_global if use_stack_global else 1
             st.info(f"Using global stack setting: **{cb_units} unit(s)**")
@@ -2039,7 +2415,7 @@ else:
                     format_func=lambda x: "Stoich (S)" if x == "stoich" else f"Inlet flow ({GAS_FLOW_UNIT})",
                 )
                 if cb_feed_mode == "stoich":
-                    cb_S = st.number_input("Stoich S based on product carbon", min_value=1.0, value=2.0, step=0.1, key="cb_S")
+                    cb_S = st.number_input("Stoich S based on product carbon", min_value=1.0, step=0.1, key="cb_S", on_change=sync_operating_from_tab, args=("cb", "S"))
                     cb_feed_slpm = cb_S * product_carbon_slpm
                 else:
                     cb_feed_display = gas_flow_number_input("Gross CO₂ inlet", default_slpm=10.0, step_slpm=0.5, key="cb_inlet")
@@ -2082,11 +2458,16 @@ else:
 
             if product_carbon_slpm <= EPS:
                 st.error("No carbon-containing products are being formed. Increase FE for at least one carbon product.")
+            elif dissolved_feed_pct >= 100.0:
+                st.error("A 100% dissolved/unaccounted feed loss leaves no carbon for products. Choose a value below 100%.")
             elif not feasible_carbon_balance:
-                minimum_S_with_losses = required_before_unreacted_slpm / max(product_carbon_slpm, EPS)
+                required_minimum_feed_slpm = minimum_gross_feed_slpm(
+                    product_carbon_slpm, carbonate_ratio_pct / 100.0, dissolved_feed_pct / 100.0,
+                )
+                minimum_S_with_losses = required_minimum_feed_slpm / product_carbon_slpm
                 st.error(
                     f"The gross feed is too small for the selected product and loss pathways. "
-                    f"Required minimum = {format_gas_flow(required_before_unreacted_slpm)} {GAS_FLOW_UNIT} "
+                    f"Required minimum = {format_gas_flow(required_minimum_feed_slpm)} {GAS_FLOW_UNIT} "
                     f"(effective S = {minimum_S_with_losses:.2f})."
                 )
             else:
@@ -2213,9 +2594,9 @@ else:
                 exp_co_pct = st.number_input("CO in cathode outlet (mol%)", min_value=0.0, max_value=100.0, value=10.0, step=0.5, key="exp_co_pct")
                 exp_h2_pct = st.number_input("H₂ in cathode outlet (mol%)", min_value=0.0, max_value=100.0, value=2.0, step=0.5, key="exp_h2_pct")
             with ex3:
-                st.metric("Total current used", f"{cb_core['I_total_A']:,.3f} A")
+                st.metric("Summed cell current used", f"{cb_core['I_total_A']:,.3f} A")
                 st.metric("Current density", f"{cb_j:,.2f} {cb_j_unit}")
-                st.caption("GC-derived FE values below use this total current and the global stack count.")
+                st.caption("GC-derived FE values below use this summed cell current.")
 
             with st.expander("Advanced products and corrections", expanded=False):
                 st.markdown("**Additional measured outlet species**")
@@ -2423,17 +2804,23 @@ else:
 
         st.markdown("---")
         st.markdown("### Product-specific energy")
-        # st.caption("This section uses the shared FE split and electrochemical operating point above, independent of which carbon workflow is open.")
+        st.caption(
+            "Energy metrics use the entered FE split, current, and cell voltage above. "
+            "In the experimental decoder, measured GC composition and inferred FEs are "
+            "reported separately and do not replace these energy assumptions."
+        )
         energy_df = product_specific_energy_rows(cb_core, cb_fe_map, cb_V)
         if energy_df.empty:
             st.info("Enter a nonzero FE to calculate product-specific energy metrics.")
         else:
-            total_lhv_eff = energy_df["LHV efficiency contribution (%)"].sum(skipna=True)
-            total_hhv_eff = energy_df["HHV efficiency contribution (%)"].sum(skipna=True)
+            total_lhv_eff = energy_df["LHV efficiency contribution (%)"].sum(skipna=False)
+            total_hhv_eff = energy_df["HHV efficiency contribution (%)"].sum(skipna=False)
             e1, e2, e3 = st.columns(3)
             with e1: st.metric("Stack power", f"{cb_core['I_total_A']*cb_V/1000.0:,.3f} kW")
-            with e2: st.metric("Total LHV efficiency", f"{total_lhv_eff:.1f}%")
-            with e3: st.metric("Total HHV efficiency", f"{total_hhv_eff:.1f}%")
+            with e2: st.metric("Total LHV efficiency", "Unavailable" if pd.isna(total_lhv_eff) else f"{total_lhv_eff:.1f}%")
+            with e3: st.metric("Total HHV efficiency", "Unavailable" if pd.isna(total_hhv_eff) else f"{total_hhv_eff:.1f}%")
+            if pd.isna(total_lhv_eff) or pd.isna(total_hhv_eff):
+                st.info("Total heating-value efficiency requires positive stack power and heating values for every selected product. Missing contributions are not treated as zero.")
             st.dataframe(
                 energy_df,
                 hide_index=True,
@@ -2447,7 +2834,13 @@ else:
                     "HHV efficiency contribution (%)": st.column_config.NumberColumn(format="%.1f"),
                 },
             )
-            st.caption("Specific electricity assigns the full electrochemical voltage requirement to formation of each product at its own FE. LHV/HHV columns show each product's contribution to total stack energy efficiency.")
+            st.caption(
+                "Specific electricity is total stack electricity divided by the production of each "
+                "product separately; it is not an allocation among coproducts and those values "
+                "must not be added. LHV/HHV contributions sum to stack efficiency when all "
+                "heating values are known. Formate values use formic-acid equivalents. "
+                "Auxiliary power, separations, and product recovery are excluded."
+            )
 
             with st.expander("Explore voltage × FE energy sensitivity", expanded=False):
                 energy_product = st.selectbox("Product", PRODUCT_LIST, index=0, key="cb_energy_product")
@@ -2485,27 +2878,53 @@ else:
 
     # -------------------- Tab: Calc — Size Active Area from CO₂ Inlet & Stoich --------------------
     with tab_size:
-        st.subheader("Calc: Size Active Area from CO₂ Inlet & Stoich (with per-product outputs)")
+        st.subheader("Size Active Area from CO₂ Feed or a Production Target")
 
         units_used = n_units_global if use_stack_global else 1
         col1, col2, col3 = st.columns(3)
         with col1:
-            co2_in_display_sz = gas_flow_number_input(
-                "CO₂ Inlet",
-                default_slpm=50.0,
-                step_slpm=1.0,
-                key="sz_inlet",
-            )
-            co2_in_slpm_sz = display_to_slpm(co2_in_display_sz)
-            S_sz = st.number_input("Stoich S (inlet/min)", min_value=1.0, value=2.0, step=0.1, key="sz_S")
+            sizing_basis = st.radio("Sizing basis", ["CO₂ inlet", "Product target"], key="sz_basis")
+            if sizing_basis == "CO₂ inlet":
+                co2_in_display_sz = gas_flow_number_input(
+                    "CO₂ Inlet", default_slpm=50.0, step_slpm=1.0, key="sz_inlet",
+                )
+                co2_in_slpm_sz = display_to_slpm(co2_in_display_sz)
+            else:
+                target_product_sz = st.selectbox("Target product", PRODUCT_LIST, key="sz_product",
+                                                format_func=friendly_product_name)
+                target_rate_sz = st.number_input("Target production rate", min_value=0.0,
+                                                value=1.0, step=0.1, key="sz_target_rate")
+                target_units_sz = ["mg/h", "g/h", "kg/h", "mmol/h", "mol/h"]
+                target_units_sz += (["SCCM", "SLPM"] if PRODUCT_MAP[target_product_sz]["Phase"] == "gas"
+                                    else ["µL/min", "mL/h", "L/h"])
+                if st.session_state.get("sz_target_unit") not in target_units_sz:
+                    st.session_state["sz_target_unit"] = "kg/h"
+                target_unit_sz = st.selectbox("Target rate unit", target_units_sz, key="sz_target_unit")
+                st.caption("Target is electrochemical production before recovery losses. "
+                           "Liquid volumes are pure-product equivalents; formate is reported as formic-acid equivalents.")
+            S_sz = st.number_input("Stoich S (inlet/min)", min_value=1.0, step=0.1, key="sz_S", on_change=sync_operating_from_tab, args=("sz", "S"))
         with col2:
-            j_val_sz = st.number_input("Current density", min_value=0.0, value=200.0, step=10.0, key="sz_j")
-            j_unit_sz = st.selectbox("j units", ["mA/cm²", "A/cm²", "A/m²"], index=0, key="sz_j_unit")
-            V_cell_sz = st.number_input("Cell voltage (V)", min_value=0.0, value=3.2, step=0.1, key="sz_V")
+            j_val_sz = st.number_input("Current density", min_value=0.0, step=operating_input_step("sz", "j_A_m2", 10.0), key="sz_j", format="%.6g", on_change=sync_operating_from_tab, args=("sz", "j_A_m2"))
+            j_unit_sz = st.selectbox("j units", ["mA/cm²", "A/cm²", "A/m²"], index=0, key="sz_j_unit", on_change=change_operating_unit, args=("sz", "j_A_m2"))
+            V_cell_sz = st.number_input("Cell voltage (V)", min_value=0.0, step=0.1, key="sz_V", on_change=sync_operating_from_tab, args=("sz", "V"))
         with col3:
             fe_map_sz = fe_grid_inputs("sz", PRODUCT_LIST, title="FE split (%)", per_row=3)
 
         j_A_m2_sz = to_A_per_m2(j_val_sz, j_unit_sz)
+        if sizing_basis == "Product target":
+            try:
+                target_mol_s_sz = product_rate_to_mol_s(target_product_sz, target_rate_sz,
+                                                       target_unit_sz, mv_L_per_mol)
+                target_size_sz = size_from_product_rate(target_product_sz, target_mol_s_sz,
+                                                        j_A_m2_sz, fe_map_sz, units_used)
+                target_core_sz = compute_core_products(ElectrolyzerInputs(
+                    target_size_sz["area_per_cell_cm2"], "cm²", j_A_m2_sz, "A/m²",
+                    V_cell_sz, fe_map_sz, units_used, mv_L_per_mol,
+                ))
+                co2_in_slpm_sz = target_core_sz["CO2_min_slpm"] * S_sz
+            except ValueError as exc:
+                st.warning(str(exc))
+                st.stop()
         co2_min_slpm_sz = co2_in_slpm_sz / max(S_sz, EPS)
         co2_min_mol_s_sz = slpm_to_mol_s(co2_min_slpm_sz, mv_L_per_mol)
 
@@ -2514,7 +2933,14 @@ else:
             fe_frac = fe_to_frac(fe_map_sz.get(p, 0.0))
             denom += fe_frac * PRODUCT_MAP[p]["co2_per_mol"] / max(PRODUCT_MAP[p]["nₑ⁻ to product"], EPS)
 
-        if denom <= EPS:
+        if j_A_m2_sz <= EPS:
+            st.error("Enter a positive current density to size an electrode.")
+        elif sizing_basis == "Product target" and denom <= EPS:
+            st.info("For a hydrogen-only target, use the target area below; CO₂ feed is zero.")
+            st.metric("Required area per cell", f"{target_size_sz['area_per_cell_cm2']:,.2f} cm²")
+            st.metric("Total active area", f"{target_size_sz['area_total_m2']*1e4:,.2f} cm²")
+            st.metric("Electrical power", f"{target_size_sz['I_total_A']*V_cell_sz/1000:,.3f} kW")
+        elif denom <= EPS:
             st.error("FE split yields zero carbon products (Σ FE_i·CO₂_per_i/n_e_i = 0). Increase FEs.")
         else:
             I_total_sz = co2_min_mol_s_sz * F / denom
@@ -2553,7 +2979,7 @@ else:
             c1, c2, c3 = st.columns(3)
             with c1:
                 st.metric(f"Total active area ({area_unit_label})", fmt_total.format(total_area_display))
-                st.metric("Total current (A)", f"{I_total_sz:.1f}")
+                st.metric("Summed cell current (A)", f"{I_total_sz:.1f}")
             with c2:
                 st.metric(f"Per-unit area ({area_unit_label})", fmt_per_unit.format(per_unit_area_display))
                 st.metric("Power (kW)", f"{P_total_kW_sz:.2f}")
@@ -2583,7 +3009,7 @@ else:
             if liq_rows:
                 df_liq_sz = pd.DataFrame([
                     {
-                        "Product": p,
+                        "Product": product_label(p),
                         f"Production rate ({LIQUID_FLOW_UNIT})": liquid_rate_to_display(kg, Lh),
                         "mol/s": n,
                     }
@@ -2600,9 +3026,9 @@ else:
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            area_u = st.number_input("Area per unit (cm²)", min_value=0.0, value=100.0, step=5.0, key="u_area")
-            j_u    = st.number_input("Current density (mA/cm²)", min_value=0.0, value=200.0, step=10.0, key="u_j")
-            V_u    = st.number_input("Cell voltage (V)", min_value=0.0, value=3.2, step=0.1, key="u_V")
+            area_u = st.number_input("Area per unit (cm²)", min_value=0.0, step=operating_input_step("u", "area_m2", 5.0), key="u_area", format="%.6g", on_change=sync_operating_from_tab, args=("u", "area_m2"))
+            j_u    = st.number_input("Current density (mA/cm²)", min_value=0.0, step=operating_input_step("u", "j_A_m2", 10.0), key="u_j", format="%.6g", on_change=sync_operating_from_tab, args=("u", "j_A_m2"))
+            V_u    = st.number_input("Cell voltage (V)", min_value=0.0, step=0.1, key="u_V", on_change=sync_operating_from_tab, args=("u", "V"))
         with col2:
             fe_map_u = fe_grid_inputs("u", PRODUCT_LIST, title="FE split (%)", per_row=3)
             units_u = n_units_global if use_stack_global else 1
@@ -2665,12 +3091,12 @@ else:
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            j_value1 = st.number_input("Current density", min_value=0.0, value=200.0, step=10.0, key="axs_j")
-            j_unit1  = st.selectbox("j units", ["mA/cm²","A/cm²","A/m²"], index=0, key="axs_j_unit")
-            V_cell1  = st.number_input("Cell voltage (V)", min_value=0.0, value=3.2, step=0.1, key="axs_V")
+            j_value1 = st.number_input("Current density", min_value=0.0, step=operating_input_step("axs", "j_A_m2", 10.0), key="axs_j", format="%.6g", on_change=sync_operating_from_tab, args=("axs", "j_A_m2"))
+            j_unit1  = st.selectbox("j units", ["mA/cm²","A/cm²","A/m²"], index=0, key="axs_j_unit", on_change=change_operating_unit, args=("axs", "j_A_m2"))
+            V_cell1  = st.number_input("Cell voltage (V)", min_value=0.0, step=0.1, key="axs_V", on_change=sync_operating_from_tab, args=("axs", "V"))
         with col2:
             fe_map1 = fe_grid_inputs("axs", PRODUCT_LIST, title="FE split (%)", per_row=3)
-            S1 = st.number_input("Stoich S for sweep", min_value=1.0, value=2.0, step=0.1, key="axs_S")
+            S1 = st.number_input("Stoich S for sweep", min_value=1.0, step=0.1, key="axs_S", on_change=sync_operating_from_tab, args=("axs", "S"))
         with col3:
             area_min = st.number_input("Area per unit - min (cm²)", min_value=0.0, value=25.0, step=5.0, key="axs_area_min")
             area_max = st.number_input("Area per unit - max (cm²)", min_value=0.0, value=400.0, step=10.0, key="axs_area_max")
@@ -2679,6 +3105,9 @@ else:
             n_max = st.number_input("# Units - max", min_value=1, value=50, step=1, key="axs_n_max")
             n_step = st.number_input("# Units step", min_value=1, value=5, step=1, key="axs_n_step")
 
+        if area_max < area_min or n_max < n_min:
+            st.warning("Maximum area and cell count must be at least their corresponding minimum values.")
+            st.stop()
         area_vals_cm2 = np.arange(area_min, area_max + 1e-9, area_step)
         n_vals = np.arange(n_min, n_max + 1, n_step)
 
@@ -2773,39 +3202,50 @@ else:
             key="cap_cap",
         )
 
-        if not df_grid.empty:
-            row0 = df_grid.iloc[0]
-            co2_min_display2 = float(row0[co2_min_grid_col])
+        if df_grid.empty:
+            st.info("Enter a valid area and cell-count range to evaluate a supply cap.")
         else:
-            co2_min_display2 = 0.0
-
-        S_min_cap = (co2_cap / max(co2_min_display2, EPS)) if co2_min_display2 > 0 else np.inf
-        util_max_cap = min(1.0, 1.0 / max(S_min_cap, EPS))
-
-        c1, c2, c3 = st.columns(3)
-        with c1: st.metric(f"CO₂ Minimum ({GAS_FLOW_UNIT})", f"{co2_min_display2:,.3f}")
-        with c2: st.metric(f"CO₂ Cap ({GAS_FLOW_UNIT})", f"{co2_cap:,.3f}")
-        with c3: st.metric("Max Utilization allowed", f"{100*util_max_cap:.1f}%")
-
-        if np.isinf(S_min_cap) or co2_cap < co2_min_display2:
-            st.warning("Cap is below the theoretical minimum CO₂ required at these operating conditions. Reduce current (j), area, units, or adjust FE split.")
-        else:
-            st.success("Feasible. You may increase utilization up to the shown maximum by reducing S accordingly.")
+            cap_grid = apply_co2_supply_cap(df_grid, co2_cap, co2_min_grid_col, S1)
+            feasible_now = int(cap_grid["Feasible at selected S"].sum())
+            feasible_any = int(cap_grid["Feasible at some utilization"].sum())
+            c1, c2, c3 = st.columns(3)
+            with c1: st.metric(f"CO₂ supply cap ({GAS_FLOW_UNIT})", f"{co2_cap:,.3f}")
+            with c2: st.metric("Feasible at selected S", f"{feasible_now:,} / {len(cap_grid):,}")
+            with c3: st.metric("Feasible at some utilization", f"{feasible_any:,} / {len(cap_grid):,}")
+            st.caption(
+                "An upper feed cap imposes a minimum utilization for each design: U ≥ product-forming CO₂ / cap. "
+                "A minimum above 100% is infeasible. Feasibility here uses the product-forming balance; "
+                "carbonate and other losses can increase the actual feed requirement."
+            )
+            cap_heat = alt.Chart(cap_grid).mark_rect().encode(
+                x=alt.X("Area_cm2:O", title="Area per cell (cm²)"),
+                y=alt.Y("Units:O", title="Number of cells"),
+                color=alt.Color("Feasible at selected S:N", title="Within supply cap",
+                                scale=alt.Scale(domain=[False, True], range=["#d97777", "#49a078"])),
+                tooltip=["Area_cm2", "Units", co2_min_grid_col, "Required CO₂ inlet at selected S",
+                         "Minimum required utilization (%)", "Maximum allowed S", "Feasible at selected S"],
+            ).properties(height=360, title="Supply-cap feasibility at the selected feed stoichiometry")
+            st.altair_chart(cap_heat, use_container_width=True)
+            with st.expander("Supply-cap results for every design", expanded=False):
+                st.dataframe(cap_grid, hide_index=True, use_container_width=True)
+                st.download_button("Download supply-cap screening (CSV)",
+                                   cap_grid.to_csv(index=False).encode("utf-8"),
+                                   file_name="cheese_supply_cap_screening.csv", mime="text/csv", key="cap_download")
 
     # -------------------- Tab: Durability, degradation, and stack replacement --------------------
     with tab_durability:
         st.subheader("Durability, Degradation & Stack Replacement")
-        st.caption("Translate measured degradation rates into replacement intervals, lifetime production, and lifetime-average energy demand.")
+        st.caption("Use measured or assumed degradation rates to screen replacement intervals, lifetime production, and lifetime-average energy demand.")
 
         with st.expander("How to use this model", expanded=True):
             st.markdown("""
             1. Choose the product whose FE will be tracked.
             2. Enter beginning-of-life voltage, FE, and carbon efficiency.
             3. Enter linear degradation rates per 1,000 operating hours.
-            4. Define replacement thresholds. The earliest threshold becomes the predicted stack life.
+            4. Define replacement thresholds. The earliest threshold sets the scenario stack life.
             5. Set plant life and availability to estimate replacements and cumulative production.
 
-            This is a **screening model**. It assumes constant current density and linear degradation within each stack cycle, followed by full performance reset after replacement.
+            This is a **screening model**. It assumes constant current density and linear degradation within each stack cycle, followed by full performance reset after replacement. It does not independently predict aging mechanisms or validate extrapolation beyond measured data.
             """)
 
         st.markdown("### 1. Beginning-of-life operating point")
@@ -2819,14 +3259,15 @@ else:
             dur_product = st.selectbox(
                 "Tracked product", PRODUCT_LIST, index=0, key="dur_product",
                 on_change=load_durability_fe_for_product,
+                format_func=product_label,
             )
-            dur_area = st.number_input("Active area per unit (cm²)", min_value=0.0, value=100.0, step=5.0, key="dur_area")
+            dur_area = st.number_input("Active area per unit (cm²)", min_value=0.0, step=operating_input_step("dur", "area_m2", 5.0), key="dur_area", format="%.6g", on_change=sync_operating_from_tab, args=("dur", "area_m2"))
         with d2:
-            dur_j = st.number_input("Current density (mA/cm²)", min_value=0.0, value=200.0, step=10.0, key="dur_j")
+            dur_j = st.number_input("Current density (mA/cm²)", min_value=0.0, step=operating_input_step("dur", "j_A_m2", 10.0), key="dur_j", format="%.6g", on_change=sync_operating_from_tab, args=("dur", "j_A_m2"))
             dur_units = n_units_global if use_stack_global else 1
             st.info(f"Using **{dur_units} unit(s)** from Global Settings")
         with d3:
-            dur_V0 = st.number_input("Initial cell voltage (V)", min_value=0.0, value=3.0, step=0.05, key="dur_V0")
+            dur_V0 = st.number_input("Initial cell voltage (V)", min_value=0.0, step=0.05, key="dur_V0", on_change=sync_operating_from_tab, args=("dur", "V"))
             dur_FE0 = st.number_input(
                 "Initial product FE (%)", min_value=0.0, max_value=100.0, step=1.0, key="dur_FE0",
                 on_change=sync_durability_fe_to_system,
@@ -2834,14 +3275,18 @@ else:
             )
         with d4:
             dur_CE0 = st.number_input(
-                "Initial fresh-feed carbon efficiency (%)",
+                "Initial selected-product carbon efficiency (%)",
                 min_value=0.0, max_value=100.0,
                 value=80.0 if PRODUCT_MAP[dur_product]["co2_per_mol"] > 0 else 100.0,
                 step=1.0,
                 key="dur_CE0",
                 disabled=PRODUCT_MAP[dur_product]["co2_per_mol"] <= 0,
             )
-            st.caption("Carbon efficiency is not applied to H₂ because H₂ contains no carbon.")
+            st.caption(
+                "Here carbon efficiency means carbon in the selected product divided by fresh "
+                "CO₂ supplied. Use the same selected-product basis for its decay rate and limit. "
+                "It excludes other carbon products and is not applied to H₂."
+            )
 
         st.markdown("### 2. Degradation rates and replacement limits")
         rate1, rate2, rate3, limit1 = st.columns(4)
@@ -2857,7 +3302,7 @@ else:
                 disabled=PRODUCT_MAP[dur_product]["co2_per_mol"] <= 0,
             )
             min_CE = st.number_input(
-                "Minimum carbon efficiency (%)", min_value=0.0, max_value=100.0, value=60.0, step=1.0, key="dur_CEmin",
+                "Minimum selected-product carbon efficiency (%)", min_value=0.0, max_value=100.0, value=60.0, step=1.0, key="dur_CEmin",
                 disabled=PRODUCT_MAP[dur_product]["co2_per_mol"] <= 0,
             )
         with limit1:
@@ -2895,6 +3340,8 @@ else:
 
         if not np.isfinite(cycle_life_h) or cycle_life_h <= EPS:
             st.error("No valid positive stack-life limit was found. Check degradation rates and thresholds.")
+        elif PRODUCT_MAP[dur_product]["co2_per_mol"] > 0 and (dur_CE0 <= 0.0 or min_CE <= 0.0):
+            st.error("Initial and minimum selected-product carbon efficiencies must be above zero; finite production at zero carbon efficiency would require infinite fresh feed.")
         elif max_voltage <= dur_V0 or min_FE >= dur_FE0 or (PRODUCT_MAP[dur_product]["co2_per_mol"] > 0 and min_CE >= dur_CE0):
             st.error("At least one replacement threshold is already reached or exceeded at beginning of life.")
         else:
@@ -2902,16 +3349,10 @@ else:
             planned_operating_h = total_calendar_h * base_capacity_factor_pct / 100.0
 
             # Treat the capacity-factor-adjusted time as the available deployment window.
-            # Each completed replacement block contains one stack life plus its downtime;
-            # the final stack does not incur end-of-project replacement downtime.
-            if replacement_downtime_h > EPS:
-                completed_replacement_blocks = int(np.floor(planned_operating_h / (cycle_life_h + replacement_downtime_h)))
-                remaining_window_h = planned_operating_h - completed_replacement_blocks * (cycle_life_h + replacement_downtime_h)
-                actual_operating_h = completed_replacement_blocks * cycle_life_h + min(cycle_life_h, max(0.0, remaining_window_h))
-                replacements = completed_replacement_blocks
-            else:
-                actual_operating_h = planned_operating_h
-                replacements = max(0, int(np.ceil(actual_operating_h / cycle_life_h - 1e-12)) - 1)
+            # A replacement is counted only when the next stack actually operates.
+            actual_operating_h, replacements = deployment_operating_hours(
+                planned_operating_h, cycle_life_h, replacement_downtime_h,
+            )
 
             area_m2_dur = dur_area * 1e-4
             j_A_m2_dur = dur_j * 10.0
@@ -3013,7 +3454,7 @@ else:
                     "Cycle age (h)": ages,
                     "Cell voltage (V)": voltage,
                     "Product FE (%)": fe_pct,
-                    "Carbon efficiency (%)": ce_pct,
+                    "Selected-product carbon efficiency (%)": ce_pct,
                     "Product rate (kg/h)": mass_rate_kg_h,
                     "Power (kW)": power_kW,
                     "Fresh CO2 rate (kg/h)": fresh_co2_kg_h,
@@ -3021,16 +3462,20 @@ else:
                 }))
                 cycle_starts.append(cycle_start)
 
-            dur_df = pd.concat(segments, ignore_index=True) if segments else pd.DataFrame()
+            dur_df = pd.concat(segments, ignore_index=True) if segments else pd.DataFrame(columns=[
+                "Operating hour", "Cycle", "Cycle age (h)", "Cell voltage (V)",
+                "Product FE (%)", "Selected-product carbon efficiency (%)", "Product rate (kg/h)",
+                "Power (kW)", "Fresh CO2 rate (kg/h)", "Cumulative product (kg)",
+            ])
 
             r1, r2, r3, r4 = st.columns(4)
-            with r1: st.metric("Predicted stack life", f"{cycle_life_h:,.0f} h")
+            with r1: st.metric("Scenario stack life", f"{cycle_life_h:,.0f} h")
             with r2: st.metric("Limiting trigger", trigger_name)
             with r3: st.metric("Stack replacements", f"{replacements:,d}")
             with r4: st.metric("Actual operating hours", f"{actual_operating_h:,.0f} h")
 
             r5, r6, r7, r8 = st.columns(4)
-            with r5: st.metric(f"Lifetime {dur_product}", f"{total_product_kg:,.1f} kg")
+            with r5: st.metric(f"Lifetime {product_label(dur_product)}", f"{total_product_kg:,.1f} kg")
             with r6: st.metric("Lifetime-average electricity", "—" if np.isnan(lifetime_sec) else f"{lifetime_sec:,.2f} kWh/kg")
             with r7: st.metric("Production lost to FE decay", f"{production_loss_pct:.1f}%")
             with r8: st.metric("Replacement-stack cost", f"${total_replacement_cost:,.0f}")
@@ -3049,7 +3494,7 @@ else:
             if not replacement_df.empty:
                 voltage_line = voltage_line + alt.Chart(replacement_df).mark_rule(strokeDash=[5, 5]).encode(x="Operating hour:Q")
 
-            perf_long_vars = ["Product FE (%)"] + (["Carbon efficiency (%)"] if carbon_per_product > 0 else [])
+            perf_long_vars = ["Product FE (%)"] + (["Selected-product carbon efficiency (%)"] if carbon_per_product > 0 else [])
             perf_long = dur_df.melt(
                 id_vars=["Operating hour", "Cycle"],
                 value_vars=perf_long_vars,
@@ -3076,7 +3521,7 @@ else:
                 dur_df_download = dur_df.copy()
                 cumulative_chart = alt.Chart(dur_df_download).mark_line().encode(
                     x=alt.X("Operating hour:Q", title="Cumulative operating hours"),
-                    y=alt.Y("Cumulative product (kg):Q", title=f"Cumulative {dur_product} (kg)"),
+                    y=alt.Y("Cumulative product (kg):Q", title=f"Cumulative {product_label(dur_product)} (kg)"),
                     tooltip=[alt.Tooltip("Operating hour:Q", format=",.0f"), alt.Tooltip("Cumulative product (kg):Q", format=",.1f")],
                 ).properties(height=330)
                 st.altair_chart(cumulative_chart, use_container_width=True)
