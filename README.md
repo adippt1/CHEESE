@@ -103,7 +103,7 @@ time-alignment should also be considered.
 
 If you use CHEESE in your work, please cite:
 
-> Prajapati, A. (2026). <em>CHEESE: CO<sub>2</sub> Handling & Electrolyzer Efficiency Scaling Evaluator</em> (Version 1.0) [Computer software]. Lawrence Livermore National Laboratory. [https://doi.org/10.11578/dc.20260909.3](https://doi.org/10.11578/dc.20260909.3)
+> Prajapati, A. (2026). <em>CHEESE: CO<sub>2</sub> Handling & Electrolyzer Efficiency Scaling Evaluator</em> [Computer software]. Lawrence Livermore National Laboratory. [https://doi.org/10.11578/dc.20260909.3](https://doi.org/10.11578/dc.20260909.3)
 
 DOE CODE record: [LLNL-CODE-2023675](https://www.osti.gov/doecode/biblio/191900)
 
