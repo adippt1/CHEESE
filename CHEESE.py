@@ -3538,5 +3538,19 @@ else:
 
 
 # -------------------- Footer --------------------
+# -------------------- Footer --------------------
 st.markdown("---")
-st.caption("© 2026 LLNL · CHEESE")
+st.markdown(
+    """
+    <div style="text-align: center; color: #6b7280; font-size: 0.9rem;">
+        © 2026 Lawrence Livermore National Security, LLC · CHEESE v1.0<br>
+        <a href="https://doi.org/10.11578/dc.20260909.3"
+           target="_blank" rel="noopener noreferrer">
+            DOI: 10.11578/dc.20260909.3
+        </a>
+        · LLNL-CODE-2023675 · BSD-3-Clause
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
