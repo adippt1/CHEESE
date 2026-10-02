@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use CHEESE in your work, please cite the software using the metadata below."
+title: "CHEESE: CO₂ Handling & Electrolyzer Engineering Scale-up Evaluator"
+type: software
+authors:
+  - family-names: "Prajapati"
+    given-names: "Aditya"
+    affiliation: "Lawrence Livermore National Laboratory"
+    website: "https://people.llnl.gov/prajapati3"
+version: "1.0"
+date-released: "2026-07-30"
+doi: "10.11578/dc.20260909.3"
+url: "https://www.osti.gov/doecode/biblio/191900"
+repository-code: "https://github.com/adippt1/CHEESE"
+license: BSD-3-Clause
+abstract: >-
+  CHEESE is a Streamlit-based engineering dashboard for translating
+  laboratory CO₂ electrolysis performance into product-rate, feed,
+  utilization, area, stack, carbon-balance, energy, durability, and
+  screening-level materials-cost requirements.
+keywords:
+  - CO2 electrolysis
+  - electrolyzer scaling
+  - electrochemical engineering
+  - carbon balance
+  - Streamlit
+identifiers:
+  - type: other
+    value: "LLNL-CODE-2023675"
+    description: "LLNL software release identifier"
