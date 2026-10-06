@@ -1877,6 +1877,30 @@ def render_Simple_mode() -> None:
     )
 
 
+with st.expander("How to use CHEESE", expanded=False):
+    if IS_Simple:
+        st.markdown("""
+        1. Select your product and enter its FE plus H₂ FE.
+        2. Choose your calculation goal and enter the operating inputs.
+        3. Review production, CO₂ requirements, and energy results.
+        4. Open Materials Cost/Test to estimate experimental material costs.
+
+        For more detailed analysis, switch to Advanced.
+        Use “Copy Simple inputs to Advanced” to transfer your scenario.
+        """)
+    else:
+        st.markdown("""
+        1. **Calculator:** establish your operating point and product rates.
+        2. **Carbon & Energy:** evaluate carbon pathways and energy demand.
+        3. **Area Sizing:** determine area from feed or production targets.
+        4. **CO₂ Utilization:** explore feed and outlet-composition trends.
+        5. **Area × Stack:** compare electrode area and cell count.
+        6. **Durability:** evaluate degradation and stack replacement.
+        7. **Materials Cost/Test:** estimate experimental material costs.
+
+        Operating inputs and FE are shared across linked Advanced tabs.
+        Properties & References contains constants and product data.
+        """)
 if IS_Simple:
     tab_simple_calc, tab_simple_cost = st.tabs([
         "Calculator",
