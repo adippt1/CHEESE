@@ -2114,63 +2114,63 @@ else:
         st.markdown("---")
                 st.subheader("Cite CHEESE")
         st.markdown("""
-Prajapati, A. (2026). *CO₂ Handling & Electrolyzer Efficiency Scaling
-Evaluator*. Lawrence Livermore National Laboratory (LLNL), Livermore,
-CA, United States.
-[https://doi.org/10.11578/DC.20260909.3](https://doi.org/10.11578/DC.20260909.3).
-        """)
+        Prajapati, A. (2026). *CO₂ Handling & Electrolyzer Efficiency Scaling
+        Evaluator*. Lawrence Livermore National Laboratory (LLNL), Livermore,
+        CA, United States.
+        [https://doi.org/10.11578/DC.20260909.3](https://doi.org/10.11578/DC.20260909.3).
+                """)
 
         st.subheader("References")
         st.markdown("""
-1. Nitopi, S., et al. (2019). Progress and perspectives of electrochemical
-   CO₂ reduction on copper in aqueous electrolyte.
-   *Chemical Reviews*, **119**, 7610–7672.
-   [https://doi.org/10.1021/acs.chemrev.8b00705](https://doi.org/10.1021/acs.chemrev.8b00705).
-
-2. Perry, J. H. *Chemical Engineers' Handbook*.
-   [Existing review/excerpt link](https://pubs.acs.org/doi/pdf/10.1021/ed027p533.1).
-   This link is just an exerpt but a good starting point for one to go out in the wild to find this book.
-   
-3. NIST Chemistry WebBook. *NIST Standard Reference Database Number 69*.
-   [https://webbook.nist.gov/chemistry/](https://webbook.nist.gov/chemistry/).
-
-4. Grim, R. G., Badgett, A., Braunecker, W. A., Guarnieri, M. T.,
-   Habas, S. E., Hahn, C., Neyerlin, K., Prajapati, A., Ruddy, D. A.,
-   and Walker, R. Z. The Chemistry of CO₂ Conversion: A Review.
-   *Chemical Reviews*, **126**, 5028–5082.
-   [https://doi.org/10.1021/acs.chemrev.5c00361](https://doi.org/10.1021/acs.chemrev.5c00361).
-
-5. Goldman, M., Prajapati, A., Duoss, E., Baker, S., and Hahn, C. (2023).
-   Bridging fundamental science and applied science to accelerate
-   CO₂ electrolyzer scale-up.
-   *Current Opinion in Electrochemistry*, **39**, 101248.
-   [https://doi.org/10.1016/j.coelec.2023.101248](https://doi.org/10.1016/j.coelec.2023.101248).
-
-6. Goldman, M. (2026). A guide to performing CO₂ electrolysis
-   in zero-gap electrolyzers.
-   *Chem Catalysis*, **6**, 101630.
-   [https://doi.org/10.1016/j.checat.2025.101630](https://doi.org/10.1016/j.checat.2025.101630).
-
-7. Rabinowitz, J. A., and Kanan, M. W. (2020).
-   The future of low-temperature carbon dioxide electrolysis depends
-   on solving one basic problem.
-   *Nature Communications*, **11**, 5231.
-   [https://doi.org/10.1038/s41467-020-19135-8](https://doi.org/10.1038/s41467-020-19135-8).
-
-8. Ma, M., Clark, E. L., Therkildsen, K. T., Dalsgaard, S.,
-   Chorkendorff, I., and Seger, B. (2020).
-   Insights into the carbon balance for CO₂ electroreduction on Cu
-   using gas diffusion electrode reactor designs.
-   *Energy & Environmental Science*, **13**, 977–985.
-   [https://doi.org/10.1039/D0EE00047G](https://doi.org/10.1039/D0EE00047G).
-
-9. Ozden, A., García de Arquer, F. P., Huang, J. E., Wicks, J.,
-   Sisler, J., Miao, R. K., O’Brien, C. P., Lee, G., Wang, X.,
-   Ip, A. H., et al. (2022).
-   Carbon-efficient carbon dioxide electrolysers.
-   *Nature Sustainability*, **5**, 563–573.
-   [https://doi.org/10.1038/s41893-022-00879-8](https://doi.org/10.1038/s41893-022-00879-8).
-        """)
+            1. Nitopi, S., et al. (2019). Progress and perspectives of electrochemical
+               CO₂ reduction on copper in aqueous electrolyte.
+               *Chemical Reviews*, **119**, 7610–7672.
+               [https://doi.org/10.1021/acs.chemrev.8b00705](https://doi.org/10.1021/acs.chemrev.8b00705).
+            
+            2. Perry, J. H. *Chemical Engineers' Handbook*.
+               [Existing review/excerpt link](https://pubs.acs.org/doi/pdf/10.1021/ed027p533.1).
+               This link is just an exerpt but a good starting point for one to go out in the wild to find this book.
+               
+            3. NIST Chemistry WebBook. *NIST Standard Reference Database Number 69*.
+               [https://webbook.nist.gov/chemistry/](https://webbook.nist.gov/chemistry/).
+            
+            4. Grim, R. G., Badgett, A., Braunecker, W. A., Guarnieri, M. T.,
+               Habas, S. E., Hahn, C., Neyerlin, K., Prajapati, A., Ruddy, D. A.,
+               and Walker, R. Z. The Chemistry of CO₂ Conversion: A Review.
+               *Chemical Reviews*, **126**, 5028–5082.
+               [https://doi.org/10.1021/acs.chemrev.5c00361](https://doi.org/10.1021/acs.chemrev.5c00361).
+            
+            5. Goldman, M., Prajapati, A., Duoss, E., Baker, S., and Hahn, C. (2023).
+               Bridging fundamental science and applied science to accelerate
+               CO₂ electrolyzer scale-up.
+               *Current Opinion in Electrochemistry*, **39**, 101248.
+               [https://doi.org/10.1016/j.coelec.2023.101248](https://doi.org/10.1016/j.coelec.2023.101248).
+            
+            6. Goldman, M. (2026). A guide to performing CO₂ electrolysis
+               in zero-gap electrolyzers.
+               *Chem Catalysis*, **6**, 101630.
+               [https://doi.org/10.1016/j.checat.2025.101630](https://doi.org/10.1016/j.checat.2025.101630).
+            
+            7. Rabinowitz, J. A., and Kanan, M. W. (2020).
+               The future of low-temperature carbon dioxide electrolysis depends
+               on solving one basic problem.
+               *Nature Communications*, **11**, 5231.
+               [https://doi.org/10.1038/s41467-020-19135-8](https://doi.org/10.1038/s41467-020-19135-8).
+            
+            8. Ma, M., Clark, E. L., Therkildsen, K. T., Dalsgaard, S.,
+               Chorkendorff, I., and Seger, B. (2020).
+               Insights into the carbon balance for CO₂ electroreduction on Cu
+               using gas diffusion electrode reactor designs.
+               *Energy & Environmental Science*, **13**, 977–985.
+               [https://doi.org/10.1039/D0EE00047G](https://doi.org/10.1039/D0EE00047G).
+            
+            9. Ozden, A., García de Arquer, F. P., Huang, J. E., Wicks, J.,
+               Sisler, J., Miao, R. K., O’Brien, C. P., Lee, G., Wang, X.,
+               Ip, A. H., et al. (2022).
+               Carbon-efficient carbon dioxide electrolysers.
+               *Nature Sustainability*, **5**, 563–573.
+               [https://doi.org/10.1038/s41893-022-00879-8](https://doi.org/10.1038/s41893-022-00879-8).
+                    """)
     
 
     # -------------------- Tab: Calculator (Area/j with S or Inlet) --------------------
