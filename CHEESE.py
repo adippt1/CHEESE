@@ -1893,13 +1893,7 @@ if IS_Simple:
     with tab_simple_cost, tab_validation_scope():
         render_cost_per_test()
 else:
-    st.caption(
-        "Advanced tabs share electrode area, current density, cell voltage, FE, and stoichiometric feed ratio S where applicable. "
-        "Area sizing calculates its own area; sweep ranges, measured feeds, and degradation assumptions are independent. "
-        "Simple scenarios can be copied explicitly into this shared operating point."
-    )
-    st.caption("Workflow: performance → carbon and energy → sizing and scale → durability → test cost. "
-               "Guide & Properties contains instructions, assumptions, and reference data.")
+   
     # -------------------- Tabs --------------------
     tab_calc, tab_carbon, tab_size, tab_s2, tab_s3, tab_durability, tab_cost, tab_instructions = st.tabs([
         "Calculator",
