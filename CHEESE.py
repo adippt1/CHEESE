@@ -1983,9 +1983,7 @@ Stoich is the "Stoichiometry". It is the ratio of actual CO₂ fed to the theore
 ---
 
 **Found a mistake or have feedback?**  
-Please [reach out to Aditya Prajapati (Adi)](https://people.llnl.gov/prajapati3).
-If possible, include the selected mode, tab, input values, and a screenshot
-or description of the unexpected result so the issue can be reproduced.
+Please [reach out!](https://people.llnl.gov/prajapati3).
     """)
 
 
