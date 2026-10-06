@@ -2128,7 +2128,7 @@ else:
                [https://doi.org/10.1021/acs.chemrev.8b00705](https://doi.org/10.1021/acs.chemrev.8b00705).
             
             2. Perry, J. H. *Chemical Engineers' Handbook*.
-               [Existing review/excerpt link](https://pubs.acs.org/doi/pdf/10.1021/ed027p533.1).
+               [https://pubs.acs.org/doi/pdf/10.1021/ed027p533.1](https://pubs.acs.org/doi/pdf/10.1021/ed027p533.1).
                This link is just an exerpt but a good starting point for one to go out in the wild to find this book.
                
             3. NIST Chemistry WebBook. *NIST Standard Reference Database Number 69*.
