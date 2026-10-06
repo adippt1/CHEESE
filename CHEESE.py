@@ -1877,30 +1877,118 @@ def render_Simple_mode() -> None:
     )
 
 
-with st.expander("How to use CHEESE", expanded=False):
+# -------------------- Mode-specific guide above the tabs --------------------
+with st.expander("How to Use the CHEESEboard", expanded=False):
     if IS_Simple:
         st.markdown("""
-        1. Select your product and enter its FE plus H₂ FE.
-        2. Choose your calculation goal and enter the operating inputs.
-        3. Review production, CO₂ requirements, and energy results.
-        4. Open Materials Cost/Test to estimate experimental material costs.
+### Simple Mode: Quick Guide
 
-        For more detailed analysis, switch to Advanced.
-        Use “Copy Simple inputs to Advanced” to transfer your scenario.
+**Purpose:**  
+Translate laboratory CO₂ electrolysis performance into product output, CO₂ feed requirements, electrode area, energy demand, and experimental material costs.
+
+Simple Mode tracks **one carbon-containing product plus H₂**. Use Advanced Mode for a multi-product FE distribution and more detailed carbon, energy, scaling, and durability analysis.
+
+**Suggested workflow:**
+
+1. **Choose your carbon product.** Enter its Faradaic efficiency (FE) and the H₂ FE. Their total must not exceed 100%. Any remaining fraction represents unassigned current.
+2. **Choose your calculation goal.** Estimate product formation from electrode area, determine electrode area from available CO₂ feed, or calculate CO₂ feed requirements for your operating conditions.
+3. **Enter the operating inputs.** Specify the current density, cell voltage, and the area or feed required for your selected calculation. Set the number of identical cells in the sidebar.
+4. **Review the results.** Examine product rates, CO₂ requirements, utilization, and energy results. Check any warnings before using the estimates.
+5. **Estimate your experimental material cost.** Open **Materials Cost/Test** to estimate the anode, membrane, cathode, and other consumable costs allocated to one experiment.
+
+**Calculation assumptions:**
+
+- Gas inputs and outputs use the **SCCM or SLPM** unit selected in the sidebar.
+- Gas flows are treated as **dry standard flows**.
+- The **Calculation assumptions** sidebar section lets you select the STP or SATP molar-volume basis.
+- Liquid-product rates are displayed in **mg/h**.
+- A stack is treated as multiple identical cells.
+
+**Moving to Advanced Mode:**
+
+- Switch to **Advanced** for multi-product FE inputs, detailed carbon accounting, experimental crossover decoding, gas-condition conversions, sensitivity analysis, and durability modeling.
+- Use **Copy Simple inputs to Advanced** to transfer your Simple scenario into the shared Advanced operating point.
+- Copying replaces the Advanced operating point and FE distribution with your selected carbon product plus H₂.
+- Switching modes alone preserves your Advanced inputs.
+
+💡 **Tips:**
+
+- Review the reporting basis shown with each result.
+- Keep the total assigned FE at or below 100%.
+- Use Advanced Mode when additional carbon pathways or operating assumptions are needed to interpret your experiment.
         """)
     else:
         st.markdown("""
-        1. **Calculator:** establish your operating point and product rates.
-        2. **Carbon & Energy:** evaluate carbon pathways and energy demand.
-        3. **Area Sizing:** determine area from feed or production targets.
-        4. **CO₂ Utilization:** explore feed and outlet-composition trends.
-        5. **Area × Stack:** compare electrode area and cell count.
-        6. **Durability:** evaluate degradation and stack replacement.
-        7. **Materials Cost/Test:** estimate experimental material costs.
+### Advanced Mode: Quick Guide
 
-        Operating inputs and FE are shared across linked Advanced tabs.
-        Properties & References contains constants and product data.
+**Purpose:**  
+This dashboard helps estimate CO₂ electrolyzer scaling parameters, product outputs, and sensitivities.
+- Gas products: H₂, CO, CH₄, C₂H₄
+- Liquid products, Methanol, Ethanol, Formate, Methylglyoxal (MGO)
+
+**Suggested workflow:**  
+Calculator → Carbon & Energy → Area Sizing → CO₂ Utilization → Area × Stack → Durability → Materials Cost/Test.
+
+**Shared inputs:**  
+Linked Advanced tabs share electrode area, current density, cell voltage, FE, and stoichiometric feed ratio S where applicable. Area Sizing calculates its own area; sweep ranges, measured feeds, and degradation assumptions are independent. The total assigned FE must not exceed 100%. Invalid inputs pause the affected tab's calculations while leaving the other tabs available.
+
+**Tabs Overview:**
+- **Calculator:**  
+  Input area, current density, cell voltage, and Faradaic efficiencies (FEs).  
+  Choose between `Stoich (S)` or `Inlet Flow` modes to compute:
+    - Gas and liquid product rates  
+    - CO₂ utilization (%)  
+    - Power and summed cell current
+
+Stoich is the "Stoichiometry". It is the ratio of actual CO₂ fed to the theoretical minimum CO₂ required to produce the observed products.
+
+        • S = 1 means 100% CO₂ utilization (no excess feed).
+
+        • S > 1 means excess CO₂ feed and lower utilization (e.g., S = 2 → 50% utilization).
+
+
+- **Carbon & Energy:**  
+  Choose **Plan from performance assumptions** for deployment scenarios or **Decode an experiment** to infer CO₂ loss/crossover from measured inlet flow, outlet flow, and GC composition. Both workflows provide carbon metrics and improved Sankey diagrams. The same tab reports product-specific energy efficiency and specific electricity consumption.
+
+- **Area Sizing:**  
+  Provides the **required electrode area** per unit and total area from available CO₂ feed or a target product rate.  
+  Includes per-product outputs in the selected gas and liquid display units.
+
+- **Sensitivity: CO₂ Utilization:**  
+  Sweeps utilization (%) to show gas outlet composition and flowrate trends.
+
+- **Sensitivity: Area × Stack:**  
+  Visualizes scaling trade-offs between cell area and number of units in the stack using a heatmap.
+
+- **Sensitivity: CO₂ Supply Cap:**  
+  Screens every area–cell-count combination at the selected S and reports the minimum utilization needed to stay within the feed cap.
+
+- **Durability:**  
+  Converts voltage rise, FE loss, and carbon-efficiency loss into stack life, replacement frequency, lifetime production, and lifetime-average energy demand.
+
+- **Materials Cost/Test:**  
+  Estimate the anode, membrane, cathode, and other consumable cost allocated to one experiment. The visual schematic updates automatically for a single cell or a multi-cell stack, and area-normalized prices can be entered in $/cm² or $/m².
+
+- **Properties & References:**  
+  Lists all physical constants, product properties, and data sources.
+
+💡 **Tips:**  
+- You can download any result table via the “Download CSV” buttons.  
+- Hover over plots for tooltips showing precise data points.  
+- Use the sidebar dropdowns to choose gas-flow and liquid-product display units.
+- Adjust **molar volume basis (STP/SATP)** in the sidebar to update standard gas volumetric conversions.
+- Open **Gas temperature, pressure, and humidity** to translate standard dry flow into actual wet flow using an ideal-gas approximation at your measured conditions.
         """)
+    st.markdown("""
+---
+
+**Found a mistake or have feedback?**  
+Please [reach out to Aditya Prajapati (Adi)](https://people.llnl.gov/prajapati3).
+If possible, include the selected mode, tab, input values, and a screenshot
+or description of the unexpected result so the issue can be reproduced.
+    """)
+
+
 if IS_Simple:
     tab_simple_calc, tab_simple_cost = st.tabs([
         "Calculator",
@@ -1917,7 +2005,6 @@ if IS_Simple:
     with tab_simple_cost, tab_validation_scope():
         render_cost_per_test()
 else:
-   
     # -------------------- Tabs --------------------
     tab_calc, tab_carbon, tab_size, tab_s2, tab_s3, tab_durability, tab_cost, tab_instructions = st.tabs([
         "Calculator",
@@ -1927,71 +2014,11 @@ else:
         "Area × Stack",
         "Durability",
         "Materials Cost/Test",
-        "Guide & Properties",
+        "Properties & References",
     ])
 
     # -------------------- Tab: Instructions --------------------
     with tab_instructions, tab_validation_scope():
-        with st.expander("How to Use the CHEESEboard", expanded=False):
-            st.markdown("""
-            ###  Quick Guide
-    
-            **Purpose:**  
-            This dashboard helps estimate CO₂ electrolyzer scaling parameters, product outputs, and sensitivities.
-            - Gas products: H₂, CO, CH₄, C₂H₄
-            - Liquid products, Methanol, Ethanol, Formate, Methylglyoxal (MGO)
-    
-            **Tabs Overview:**
-            - **Calculator:**  
-              Input area, current density, cell voltage, and Faradaic efficiencies (FEs).  
-              Choose between `Stoich (S)` or `Inlet Flow` modes to compute:
-                - Gas and liquid product rates  
-                - CO₂ utilization (%)  
-                - Power and summed cell current
-            
-            Stoich is the "Stoichiometry". It is the ratio of actual CO₂ fed to the theoretical minimum CO₂ required to produce the observed products.
-               
-                    • S = 1 means 100% CO₂ utilization (no excess feed).
-               
-                    • S > 1 means excess CO₂ feed and lower utilization (e.g., S = 2 → 50% utilization).
-         
-        
-            - **Carbon & Energy:**  
-              Choose **Plan from performance assumptions** for deployment scenarios or **Decode an experiment** to infer CO₂ loss/crossover from measured inlet flow, outlet flow, and GC composition. Both workflows provide carbon metrics and improved Sankey diagrams. The same tab reports product-specific energy efficiency and specific electricity consumption.
-
-            - **Area Sizing:**  
-              Provides the **required electrode area** per unit and total area from available CO₂ feed or a target product rate.  
-              Includes per-product outputs in the selected gas and liquid display units.
-    
-            - **Sensitivity: CO₂ Utilization:**  
-              Sweeps utilization (%) to show gas outlet composition and flowrate trends.
-    
-            - **Sensitivity: Area × Stack:**  
-              Visualizes scaling trade-offs between cell area and number of units in the stack using a heatmap.
-    
-            - **Sensitivity: CO₂ Supply Cap:**  
-              Screens every area–cell-count combination at the selected S and reports the minimum utilization needed to stay within the feed cap.
-
-            - **Durability:**  
-              Converts voltage rise, FE loss, and carbon-efficiency loss into stack life, replacement frequency, lifetime production, and lifetime-average energy demand.
-    
-            - **Materials Cost/Test:**  
-              Estimate the anode, membrane, cathode, and other consumable cost allocated to one experiment. The visual schematic updates automatically for a single cell or a multi-cell stack, and area-normalized prices can be entered in $/cm² or $/m².
-
-            - **Guide & Properties (this tab):**  
-              Lists all physical constants, product properties, and data sources.
-    
-            💡**Tips:**  
-            - You can download any result table via the “Download CSV” buttons.  
-            - Hover over plots for tooltips showing precise data points.  
-            - Use the sidebar dropdowns to choose gas-flow and liquid-product display units.
-            - Adjust **molar volume basis (STP/SATP)** in the sidebar to update standard gas volumetric conversions.
-            - Open **Gas temperature, pressure, and humidity** to translate standard dry flow into actual wet flow using an ideal-gas approximation at your measured conditions.
-            - If you find any mistakes please feel free to [reach out](https://people.llnl.gov/prajapati3)!
-    
-            ---
-            """)
-
         st.subheader("Constants & Properties")
         st.markdown(f"""
     - **Faraday constant (F):** `{F:.5f}` C·mol⁻¹ e⁻  
