@@ -12,6 +12,7 @@
 #
 # Dependencies: streamlit, numpy, pandas, altair, plotly
 
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 import numpy as np
@@ -679,6 +680,19 @@ def apply_co2_supply_cap(grid: pd.DataFrame, cap: float, co2_min_column: str,
     out.loc[positive, "Maximum allowed S"] = cap / demand[positive]
     return out
 
+class TabValidationError(Exception):
+    """Stop an invalid tab's calculations without stopping the dashboard."""
+
+
+@contextmanager
+def tab_validation_scope():
+    """Leave validation feedback and inputs visible; render subsequent tabs."""
+    try:
+        yield
+    except TabValidationError:
+        pass
+
+
 # ---------- UI helpers for synchronized FE inputs ----------
 FE_SYNC_SECTIONS = ["calc", "cb", "sz", "u", "axs"]
 
@@ -907,7 +921,7 @@ def fe_grid_inputs(
         validate_fe_distribution(fe_map)
     except ValueError as exc:
         st.error(str(exc))
-        st.stop()
+        raise TabValidationError()
     return fe_map
 
 # -------------------- Core calculators (multi-product, gas vs liquid) --------------------
@@ -1865,10 +1879,10 @@ def render_Simple_mode() -> None:
 
 if IS_Simple:
     tab_simple_calc, tab_simple_cost = st.tabs([
-        "Quick Calculator",
+        "Calculator",
         "Materials Cost/Test",
     ])
-    with tab_simple_calc:
+    with tab_simple_calc, tab_validation_scope():
         render_Simple_mode()
         st.caption("Copying replaces the Advanced operating point and FE distribution with "
                    "the selected carbon product plus H₂. Switching modes alone preserves Advanced inputs.")
@@ -1876,7 +1890,7 @@ if IS_Simple:
                   on_click=copy_simple_to_advanced, args=(mv_L_per_mol, int(n_units_global)))
         if st.session_state.get("simple_copy_status"):
             st.caption(st.session_state["simple_copy_status"])
-    with tab_simple_cost:
+    with tab_simple_cost, tab_validation_scope():
         render_cost_per_test()
 else:
     st.caption(
@@ -1884,20 +1898,22 @@ else:
         "Area sizing calculates its own area; sweep ranges, measured feeds, and degradation assumptions are independent. "
         "Simple scenarios can be copied explicitly into this shared operating point."
     )
+    st.caption("Workflow: performance → carbon and energy → sizing and scale → durability → test cost. "
+               "Guide & Properties contains instructions, assumptions, and reference data.")
     # -------------------- Tabs --------------------
-    tab_instructions, tab_calc, tab_cost, tab_carbon, tab_size, tab_s2, tab_s3, tab_durability = st.tabs([
-        "Instructions",
+    tab_calc, tab_carbon, tab_size, tab_s2, tab_s3, tab_durability, tab_cost, tab_instructions = st.tabs([
         "Calculator",
-        "Materials Cost/Test",
         "Carbon & Energy",
         "Area Sizing",
         "CO₂ Utilization",
         "Area × Stack",
         "Durability",
+        "Materials Cost/Test",
+        "Guide & Properties",
     ])
 
     # -------------------- Tab: Instructions --------------------
-    with tab_instructions:
+    with tab_instructions, tab_validation_scope():
         with st.expander("How to Use the CHEESEboard", expanded=False):
             st.markdown("""
             ###  Quick Guide
@@ -1922,9 +1938,6 @@ else:
                     • S > 1 means excess CO₂ feed and lower utilization (e.g., S = 2 → 50% utilization).
          
         
-            - **Materials Cost/Test:**  
-              Estimate the anode, membrane, cathode, and other consumable cost allocated to one experiment. The visual schematic updates automatically for a single cell or a multi-cell stack, and area-normalized prices can be entered in $/cm² or $/m².
-
             - **Carbon & Energy:**  
               Choose **Plan from performance assumptions** for deployment scenarios or **Decode an experiment** to infer CO₂ loss/crossover from measured inlet flow, outlet flow, and GC composition. Both workflows provide carbon metrics and improved Sankey diagrams. The same tab reports product-specific energy efficiency and specific electricity consumption.
 
@@ -1944,7 +1957,10 @@ else:
             - **Durability:**  
               Converts voltage rise, FE loss, and carbon-efficiency loss into stack life, replacement frequency, lifetime production, and lifetime-average energy demand.
     
-            - **Constants & Reference (this tab):**  
+            - **Materials Cost/Test:**  
+              Estimate the anode, membrane, cathode, and other consumable cost allocated to one experiment. The visual schematic updates automatically for a single cell or a multi-cell stack, and area-normalized prices can be entered in $/cm² or $/m².
+
+            - **Guide & Properties (this tab):**  
               Lists all physical constants, product properties, and data sources.
     
             💡**Tips:**  
@@ -2066,7 +2082,7 @@ else:
     
 
     # -------------------- Tab: Calculator (Area/j with S or Inlet) --------------------
-    with tab_calc:
+    with tab_calc, tab_validation_scope():
         st.subheader("Calculator: Provide Area, j, FE; choose Stoich S or Inlet")
         st.caption("Multi-product, true gas vs liquid handling. Shows per-product outputs.")
 
@@ -2144,7 +2160,7 @@ else:
         if core["CO2_min_slpm"] > co2_in_slpm + EPS:
             st.error(f"The specified feed cannot support the requested product formation. {warn} "
                      "Increase CO₂ feed or reduce current, area, cell count, or carbon-product FE.")
-            st.stop()
+            raise TabValidationError()
 
         # GAS metrics
         st.subheader("Gas-side Results (product-forming balance)")
@@ -2224,11 +2240,11 @@ else:
             st.warning(warn)
 
     # -------------------- Tab: Materials cost per test --------------------
-    with tab_cost:
+    with tab_cost, tab_validation_scope():
         render_cost_per_test()
 
     # -------------------- Tab: Carbon balance and product-specific energy --------------------
-    with tab_carbon:
+    with tab_carbon, tab_validation_scope():
         st.subheader("Carbon Balance & Product-Specific Energy")
         st.caption("Use the planning model to explore a future system, or decode crossover directly from measured inlet/outlet data.")
 
@@ -2384,9 +2400,6 @@ else:
             st.info(f"Using global stack setting: **{cb_units} unit(s)**")
 
         cb_fe_map = fe_grid_inputs("cb", PRODUCT_LIST, title="Shared Faradaic-efficiency split (%)", per_row=4)
-        cb_fe_sum = sum(cb_fe_map.values())
-        if cb_fe_sum > 100.0 + 1e-9:
-            st.warning(f"The shared FE sum is {cb_fe_sum:.1f}%. Values above 100% are not physically closed.")
 
         cb_inp = ElectrolyzerInputs(
             area_value=cb_area,
@@ -2877,7 +2890,7 @@ else:
                     st.altair_chart(energy_heat, use_container_width=True)
 
     # -------------------- Tab: Calc — Size Active Area from CO₂ Inlet & Stoich --------------------
-    with tab_size:
+    with tab_size, tab_validation_scope():
         st.subheader("Size Active Area from CO₂ Feed or a Production Target")
 
         units_used = n_units_global if use_stack_global else 1
@@ -2924,7 +2937,7 @@ else:
                 co2_in_slpm_sz = target_core_sz["CO2_min_slpm"] * S_sz
             except ValueError as exc:
                 st.warning(str(exc))
-                st.stop()
+                raise TabValidationError()
         co2_min_slpm_sz = co2_in_slpm_sz / max(S_sz, EPS)
         co2_min_mol_s_sz = slpm_to_mol_s(co2_min_slpm_sz, mv_L_per_mol)
 
@@ -3021,7 +3034,7 @@ else:
                 )
 
     # -------------------- Tab: Sensitivity — CO₂ Utilization (Gas Only) --------------------
-    with tab_s2:
+    with tab_s2, tab_validation_scope():
         st.subheader("Sensitivity: CO₂ Utilization (Gas flows & composition only)")
 
         col1, col2, col3 = st.columns(3)
@@ -3086,7 +3099,7 @@ else:
         )
 
     # -------------------- Tab: Sensitivity — Area × Stack / CO₂ Cap --------------------
-    with tab_s3:
+    with tab_s3, tab_validation_scope():
         st.subheader(f"Sensitivity: Area × Stack (gas {GAS_FLOW_UNIT} + liquid {LIQUID_FLOW_UNIT}) + CO₂ Cap")
 
         col1, col2, col3 = st.columns(3)
@@ -3107,7 +3120,7 @@ else:
 
         if area_max < area_min or n_max < n_min:
             st.warning("Maximum area and cell count must be at least their corresponding minimum values.")
-            st.stop()
+            raise TabValidationError()
         area_vals_cm2 = np.arange(area_min, area_max + 1e-9, area_step)
         n_vals = np.arange(n_min, n_max + 1, n_step)
 
@@ -3233,7 +3246,7 @@ else:
                                    file_name="cheese_supply_cap_screening.csv", mime="text/csv", key="cap_download")
 
     # -------------------- Tab: Durability, degradation, and stack replacement --------------------
-    with tab_durability:
+    with tab_durability, tab_validation_scope():
         st.subheader("Durability, Degradation & Stack Replacement")
         st.caption("Use measured or assumed degradation rates to screen replacement intervals, lifetime production, and lifetime-average energy demand.")
 
@@ -3553,4 +3566,3 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
