@@ -2112,7 +2112,7 @@ else:
             key="download_constants_csv",
         )
         st.markdown("---")
-                st.subheader("Cite CHEESE")
+        st.subheader("Cite CHEESE")
         st.markdown("""
         Prajapati, A. (2026). *CO₂ Handling & Electrolyzer Efficiency Scaling
         Evaluator*. Lawrence Livermore National Laboratory (LLNL), Livermore,
