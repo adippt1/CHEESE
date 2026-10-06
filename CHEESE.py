@@ -1967,7 +1967,7 @@ Stoich is the "Stoichiometry". It is the ratio of actual CO₂ fed to the theore
   Converts voltage rise, FE loss, and carbon-efficiency loss into stack life, replacement frequency, lifetime production, and lifetime-average energy demand.
 
 - **Materials Cost/Test:**  
-  Estimate the anode, membrane, cathode, and other consumable cost allocated to one experiment. The visual schematic updates automatically for a single cell or a multi-cell stack, and area-normalized prices can be entered in $/cm² or $/m².
+  Estimate the anode, membrane, cathode, and other consumable cost allocated to one experiment. The visual schematic updates automatically for a single cell or a multi-cell stack, and area-normalized prices can be entered in $cm²$ or $m²$.
 
 - **Properties & References:**  
   Lists all physical constants, product properties, and data sources.
