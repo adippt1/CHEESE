@@ -326,6 +326,14 @@ PRODUCTS: List[Dict] = [
     {"Product": "Methanol",   "Phase": "liquid", "MW (g/mol)": 32.042, "nₑ⁻ to product": 6,  "co2_per_mol": 1.0, "LHV (MJ/kg)": 19.9,  "HHV (MJ/kg)": 22.7, "ρ_liq (kg/L)": 0.791, "E0 (V) [display]": 1.20},
     {"Product": "Ethanol",    "Phase": "liquid", "MW (g/mol)": 46.069, "nₑ⁻ to product": 12, "co2_per_mol": 2.0, "LHV (MJ/kg)": 26.8,  "HHV (MJ/kg)": 29.7, "ρ_liq (kg/L)": 0.789, "E0 (V) [display]": 1.14},
     {"Product": "Formate",    "Phase": "liquid", "MW (g/mol)": 46.026, "nₑ⁻ to product": 2,  "co2_per_mol": 1.0, "LHV (MJ/kg)": 4.58,  "HHV (MJ/kg)": 5.53, "ρ_liq (kg/L)": 1.220, "E0 (V) [display]": 1.35},
+    # Acetate is reported as acetic-acid equivalents, consistent with Formate.
+    # 2 CO2 + 7 H+ + 8 e- -> CH3COO- + 2 H2O.
+    # NIST: MW 60.052 g/mol; liquid combustion enthalpy -875.16 kJ/mol.
+    # HHV = 875.16/60.052; LHV = (875.16 - 2*44.004)/60.052 MJ/kg.
+    # NIOSH method 1603: neat-acetic-acid density 1.049 kg/L at 25 C.
+    # https://webbook.nist.gov/cgi/cbook.cgi?ID=C64197&Mask=2
+    # https://www.cdc.gov/niosh/docs/2003-154/pdfs/1603.pdf
+    {"Product": "Acetate",    "Phase": "liquid", "MW (g/mol)": 60.052, "nₑ⁻ to product": 8, "co2_per_mol": 2.0, "LHV (MJ/kg)": (875.16 - 2 * 44.004) / 60.052, "HHV (MJ/kg)": 875.16 / 60.052, "ρ_liq (kg/L)": 1.049, "E0 (V) [display]": np.nan},
     {"Product": "MGO",        "Phase": "liquid", "MW (g/mol)": 72.060, "nₑ⁻ to product": 12, "co2_per_mol": 3.0, "LHV (MJ/kg)": np.nan,"HHV (MJ/kg)": np.nan,"ρ_liq (kg/L)": 1.050, "E0 (V) [display]": np.nan},
 ]
 
@@ -339,6 +347,8 @@ def product_label(product: str) -> str:
     """Display the reporting basis while retaining stable internal product keys."""
     if product == "Formate":
         return "Formate (formic-acid equivalents)"
+    if product == "Acetate":
+        return "Acetate (acetic-acid equivalents)"
     return "Methylglyoxal (MGO)" if product == "MGO" else product
 
 def minimum_gross_feed_slpm(product_slpm: float, carbonate_ratio: float, dissolved_fraction: float) -> float:
@@ -1952,7 +1962,7 @@ Simple Mode tracks **one carbon-containing product plus H₂**. Use Advanced Mod
 **Purpose:**  
 This dashboard helps estimate CO₂ electrolyzer scaling parameters, product outputs, and sensitivities.
 - Gas products: H₂, CO, CH₄, C₂H₄
-- Liquid products, Methanol, Ethanol, Formate, Methylglyoxal (MGO)
+- Liquid products: Methanol, Ethanol, Formate, Acetate, Methylglyoxal (MGO)
 
 **Suggested workflow:**  
 Calculator → Carbon & Energy → Area Sizing → CO₂ Utilization → Area × Stack → Durability → Materials Cost/Test.
@@ -2138,7 +2148,9 @@ with st.container(key=_motion_key):
             st.caption(
                 "Liquid volumes are neat-product equivalents calculated from mass and density; "
                 "they exclude electrolyte and solvent. Formate mass, volume, and heating values "
-                "are reported as formic-acid equivalents. MGO density is an approximate "
+                "are reported as formic-acid equivalents. Acetate mass, volume, and heating values "
+                "use acetic-acid equivalents, excluding counterion mass and electrolyte volume; "
+                "its equilibrium potential is not specified. MGO density is an approximate "
                 "screening input; its heating values and equilibrium potential are unavailable."
             )
             with st.expander("Heating-value sources and definitions", expanded=False):
@@ -2149,9 +2161,14 @@ with st.container(key=_motion_key):
                     "[CO₂](https://webbook.nist.gov/cgi/cbook.cgi?ID=C124389&Mask=1), "
                     "[ethylene](https://webbook.nist.gov/cgi/cbook.cgi?ID=C74851&Mask=1), "
                     "[formic acid](https://webbook.nist.gov/cgi/cbook.cgi?ID=C64186&Mask=2), "
+                    "[acetic acid](https://webbook.nist.gov/cgi/cbook.cgi?ID=C64197&Mask=2), "
                     "and [water](https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Mask=3). "
                     "CO has equal LHV and HHV because its combustion forms no water. "
                     "Formic-acid values use Sinke (1959), as compiled by NIST. "
+                    "Acetic-acid HHV uses 875.16 kJ/mol (Steele et al., 1997); LHV subtracts "
+                    "the vaporization enthalpy of two moles of combustion water. "
+                    "Acetic-acid density is from [NIOSH method 1603]"
+                    "(https://www.cdc.gov/niosh/docs/2003-154/pdfs/1603.pdf). "
                     "Other heating values are retained as rounded screening constants."
                 )
 
@@ -2996,7 +3013,8 @@ with st.container(key=_motion_key):
                     "Specific electricity is total stack electricity divided by the production of each "
                     "product separately; it is not an allocation among coproducts and those values "
                     "must not be added. LHV/HHV contributions sum to stack efficiency when all "
-                    "heating values are known. Formate values use formic-acid equivalents. "
+                    "heating values are known. Formate uses formic-acid equivalents; acetate uses "
+                    "acetic-acid equivalents. "
                     "Auxiliary power, separations, and product recovery are excluded."
                 )
 
