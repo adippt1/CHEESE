@@ -2150,7 +2150,7 @@ with st.container(key=_motion_key):
                 "they exclude electrolyte and solvent. Formate mass, volume, and heating values "
                 "are reported as formic-acid equivalents. Acetate mass, volume, and heating values "
                 "use acetic-acid equivalents, excluding counterion mass and electrolyte volume; "
-                "its equilibrium potential is not specified. MGO density is an approximate "
+                "MGO density is an approximate "
                 "screening input; its heating values and equilibrium potential are unavailable."
             )
             with st.expander("Heating-value sources and definitions", expanded=False):
