@@ -2418,7 +2418,7 @@ with st.container(key=_motion_key):
                 format_func=lambda x: "Plan from performance assumptions" if x == "planning" else "Decode an experiment",
             )
 
-            with st.expander("How the two workflows differ", expanded=True):
+            with st.expander("How the two workflows differ", expanded=False):
                 st.markdown(
                     r"""
         **Planning mode** starts from the applied current and the shared
@@ -2885,7 +2885,7 @@ with st.container(key=_motion_key):
                             f"Measured flow ({GAS_FLOW_UNIT})": slpm_to_display(flow_slpm),
                         })
                     fe_check_df = pd.DataFrame(fe_check_rows)
-                    with st.expander("Compare GC-derived FE with the FE", expanded=True):
+                    with st.expander("Compare GC-derived FE with the FE", expanded=False):
                         st.dataframe(
                             fe_check_df,
                             hide_index=True,
@@ -3413,7 +3413,7 @@ with st.container(key=_motion_key):
             st.subheader("Durability, Degradation & Stack Replacement")
             st.caption("Use measured or assumed degradation rates to screen replacement intervals, lifetime production, and lifetime-average energy demand.")
 
-            with st.expander("How to use this model", expanded=True):
+            with st.expander("How to use this model", expanded=False):
                 st.markdown("""
                 1. Choose the product whose FE will be tracked.
                 2. Enter beginning-of-life voltage, FE, and carbon efficiency.
