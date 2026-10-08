@@ -333,7 +333,7 @@ PRODUCTS: List[Dict] = [
     # NIOSH method 1603: neat-acetic-acid density 1.049 kg/L at 25 C.
     # https://webbook.nist.gov/cgi/cbook.cgi?ID=C64197&Mask=2
     # https://www.cdc.gov/niosh/docs/2003-154/pdfs/1603.pdf
-    {"Product": "Acetate",    "Phase": "liquid", "MW (g/mol)": 60.052, "nₑ⁻ to product": 8, "co2_per_mol": 2.0, "LHV (MJ/kg)": (875.16 - 2 * 44.004) / 60.052, "HHV (MJ/kg)": 875.16 / 60.052, "ρ_liq (kg/L)": 1.049, "E0 (V) [display]": np.nan},
+    {"Product": "Acetate",    "Phase": "liquid", "MW (g/mol)": 60.052, "nₑ⁻ to product": 8, "co2_per_mol": 2.0, "LHV (MJ/kg)": (875.16 - 2 * 44.004) / 60.052, "HHV (MJ/kg)": 875.16 / 60.052, "ρ_liq (kg/L)": 1.049, "E0 (V) [display]": 1.12},
     {"Product": "MGO",        "Phase": "liquid", "MW (g/mol)": 72.060, "nₑ⁻ to product": 12, "co2_per_mol": 3.0, "LHV (MJ/kg)": np.nan,"HHV (MJ/kg)": np.nan,"ρ_liq (kg/L)": 1.050, "E0 (V) [display]": np.nan},
 ]
 
