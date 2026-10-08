@@ -1,7 +1,9 @@
 # CHEESE — CO₂ Handling and Electrolyzer Efficiency Scaling Evaluator
-# Mode-specific taglines:
-# Simple: Because scaling electrolysis shouldn’t be this gouda!
-# Advanced: Because serious scaling deserves the full CHEESEboard!
+
+# Because scaling electrolysis shouldn’t be this gouda!
+# ... and
+# Because serious scaling deserves the full CHEESEboard!
+
 # Author: Aditya Prajapati
 #
 # Open-source license: BSD-3-Clause 
