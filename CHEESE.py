@@ -304,8 +304,8 @@ def sanitize_numeric_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 # -------------------- Product properties  --------------------
 
-# E0 values are approximate display values from this review (except MGO,
-# whose unverified E0 has been removed): https://doi.org/10.1021/acs.chemrev.8b00705
+# E0 values are  display values from this review (except MGO,
+# whose E0 wasn't available at the time of writing the code so I removed it): https://doi.org/10.1021/acs.chemrev.8b00705
 # Corrected heating values use NIST SRD 69 thermochemistry at 298.15 K:
 # CO: (393.51 - 110.53)/28.010 = 10.10 MJ/kg, LHV = HHV.
 # Ethylene: HHV = 1411.20/28.054 = 50.30 MJ/kg.
@@ -316,6 +316,13 @@ def sanitize_numeric_columns(df: pd.DataFrame) -> pd.DataFrame:
 # https://webbook.nist.gov/cgi/cbook.cgi?ID=C74851&Mask=1
 # https://webbook.nist.gov/cgi/cbook.cgi?ID=C64186&Mask=2
 # https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Mask=3
+# Acetate is reported as acetic-acid equivalents, consistent with Formate.
+# 2 CO2 + 7 H+ + 8 e- -> CH3COO- + 2 H2O.
+# NIST: MW 60.052 g/mol; liquid combustion enthalpy -875.16 kJ/mol.
+# HHV = 875.16/60.052; LHV = (875.16 - 2*44.004)/60.052 MJ/kg.
+# NIOSH method 1603: neat-acetic-acid density 1.049 kg/L at 25 C.
+# https://webbook.nist.gov/cgi/cbook.cgi?ID=C64197&Mask=2
+# https://www.cdc.gov/niosh/docs/2003-154/pdfs/1603.pdf
 PRODUCTS: List[Dict] = [
     # Gases
     {"Product": "CO",         "Phase": "gas",    "MW (g/mol)": 28.010, "nₑ⁻ to product": 2,  "co2_per_mol": 1.0, "LHV (MJ/kg)": 10.1,  "HHV (MJ/kg)": 10.1, "ρ_liq (kg/L)": np.nan, "E0 (V) [display]": 1.33},
@@ -326,13 +333,6 @@ PRODUCTS: List[Dict] = [
     {"Product": "Methanol",   "Phase": "liquid", "MW (g/mol)": 32.042, "nₑ⁻ to product": 6,  "co2_per_mol": 1.0, "LHV (MJ/kg)": 19.9,  "HHV (MJ/kg)": 22.7, "ρ_liq (kg/L)": 0.791, "E0 (V) [display]": 1.20},
     {"Product": "Ethanol",    "Phase": "liquid", "MW (g/mol)": 46.069, "nₑ⁻ to product": 12, "co2_per_mol": 2.0, "LHV (MJ/kg)": 26.8,  "HHV (MJ/kg)": 29.7, "ρ_liq (kg/L)": 0.789, "E0 (V) [display]": 1.14},
     {"Product": "Formate",    "Phase": "liquid", "MW (g/mol)": 46.026, "nₑ⁻ to product": 2,  "co2_per_mol": 1.0, "LHV (MJ/kg)": 4.58,  "HHV (MJ/kg)": 5.53, "ρ_liq (kg/L)": 1.220, "E0 (V) [display]": 1.35},
-    # Acetate is reported as acetic-acid equivalents, consistent with Formate.
-    # 2 CO2 + 7 H+ + 8 e- -> CH3COO- + 2 H2O.
-    # NIST: MW 60.052 g/mol; liquid combustion enthalpy -875.16 kJ/mol.
-    # HHV = 875.16/60.052; LHV = (875.16 - 2*44.004)/60.052 MJ/kg.
-    # NIOSH method 1603: neat-acetic-acid density 1.049 kg/L at 25 C.
-    # https://webbook.nist.gov/cgi/cbook.cgi?ID=C64197&Mask=2
-    # https://www.cdc.gov/niosh/docs/2003-154/pdfs/1603.pdf
     {"Product": "Acetate",    "Phase": "liquid", "MW (g/mol)": 60.052, "nₑ⁻ to product": 8, "co2_per_mol": 2.0, "LHV (MJ/kg)": (875.16 - 2 * 44.004) / 60.052, "HHV (MJ/kg)": 875.16 / 60.052, "ρ_liq (kg/L)": 1.049, "E0 (V) [display]": 1.12},
     {"Product": "MGO",        "Phase": "liquid", "MW (g/mol)": 72.060, "nₑ⁻ to product": 12, "co2_per_mol": 3.0, "LHV (MJ/kg)": np.nan,"HHV (MJ/kg)": np.nan,"ρ_liq (kg/L)": 1.050, "E0 (V) [display]": np.nan},
 ]
